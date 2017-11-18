@@ -11,11 +11,8 @@ func Migrate() {
 	CreatePublicSchema{}.Migrate()
 	CreateProjectManagementSchema{}.Migrate()
 	CreateUserTable{}.Migrate()
+	CreateTaskStatusTable{}.Migrate()
 
-	// e = db.CreateTable(&models.TaskStatus{}, &opt)
-	// if e != nil {
-	// 	log.Println(e)
-	// }
 	// e = db.CreateTable(&models.TaskType{}, &opt)
 	// if e != nil {
 	// 	log.Println(e)
@@ -51,6 +48,7 @@ func Migrate() {
 }
 
 func Rollback() {
+	CreateTaskStatusTable{}.Rollback()
 	CreateUserTable{}.Rollback()
 
 	CreateProjectManagementSchema{}.Rollback()

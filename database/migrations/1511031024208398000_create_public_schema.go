@@ -1,6 +1,5 @@
 package migrations
 
-import "log"
 import "gogit/database"
 
 // CreatePublicSchema Migration Struct
@@ -10,10 +9,7 @@ type CreatePublicSchema struct{}
 func (CreatePublicSchema) Migrate() {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e := db.Exec("CREATE SCHEMA public;")
-	if e != nil {
-		log.Println(e)
-	}
+	db.Exec("CREATE SCHEMA public;")
 
 }
 
@@ -21,9 +17,5 @@ func (CreatePublicSchema) Migrate() {
 func (CreatePublicSchema) Rollback() {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e := db.Exec("DROP SCHEMA public CASCADE;")
-	if e != nil {
-		log.Println(e)
-	}
-
+	db.Exec("DROP SCHEMA public CASCADE;")
 }

@@ -34,7 +34,7 @@ func (CreateUserTable) Migrate() {
 func (CreateUserTable) Rollback() {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e := db.Model(&models.User{}).Exec("DROP TABLE ?TableName CASCADE;")
+	_, e := db.Model(&models.User{}).Exec("DROP TABLE IF EXISTS ?TableName CASCADE;")
 	if e != nil {
 		log.Println(e)
 	}

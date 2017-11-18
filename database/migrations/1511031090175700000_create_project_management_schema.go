@@ -1,6 +1,5 @@
 package migrations
 
-import "log"
 import "gogit/database"
 
 // CreateProjectManagementSchema Migration Struct
@@ -10,10 +9,7 @@ type CreateProjectManagementSchema struct{}
 func (CreateProjectManagementSchema) Migrate() {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e := db.Exec("CREATE SCHEMA project_management;")
-	if e != nil {
-		log.Println(e)
-	}
+	db.Exec("CREATE SCHEMA project_management;")
 
 }
 
@@ -21,9 +17,6 @@ func (CreateProjectManagementSchema) Migrate() {
 func (CreateProjectManagementSchema) Rollback() {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e := db.Exec("DROP SCHEMA project_management CASCADE;")
-	if e != nil {
-		log.Println(e)
-	}
+	db.Exec("DROP SCHEMA project_management CASCADE;")
 
 }

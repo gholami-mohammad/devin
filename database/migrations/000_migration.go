@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-// Migrate , Load all migrations functions
+// Migrate database
 func Migrate() {
 	log.SetFlags(log.Lshortfile)
 
@@ -12,7 +12,7 @@ func Migrate() {
 	CreateProjectManagementSchema{}.Migrate()
 	CreateUserTable{}.Migrate()
 	CreateTaskStatusTable{}.Migrate()
-
+	CreateTaskTypeTable{}.Migrate()
 	// e = db.CreateTable(&models.TaskType{}, &opt)
 	// if e != nil {
 	// 	log.Println(e)
@@ -47,7 +47,9 @@ func Migrate() {
 	// }
 }
 
+// Rollback all migrations
 func Rollback() {
+	CreateTaskTypeTable{}.Rollback()
 	CreateTaskStatusTable{}.Rollback()
 	CreateUserTable{}.Rollback()
 

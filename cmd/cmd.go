@@ -75,23 +75,23 @@ type %v struct{}
 
 // Migrate the database to a new version
 func (%v) Migrate() {
-db := database.NewPGInstance()
-defer db.Close()
-_, e := db.Exec("")
-if e != nil {
-log.Println(e)
-}
+    db := database.NewPGInstance()
+    defer db.Close()
+    _, e := db.Exec("")
+    if e != nil {
+        log.Println(e)
+    }
 
 }
 
 // Rollback the database to previous version
 func (%v) Rollback() {
-db := database.NewPGInstance()
-defer db.Close()
-_, e := db.Exec("")
-if e != nil {
-log.Println(e)
-}
+    db := database.NewPGInstance()
+    defer db.Close()
+    _, e := db.Exec("")
+    if e != nil {
+        log.Println(e)
+    }
 
 }`, strcase.ToCamel(*create), strcase.ToCamel(*create), strcase.ToCamel(*create), strcase.ToCamel(*create))
 	f, e := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0777)

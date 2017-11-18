@@ -21,7 +21,7 @@ var (
 // Basic flag declarations are available for string, integer, and boolean options.
 func init() {
 	command = flag.String("run", "", "The command")
-	create = flag.String("create", "development", "a string")
+	create = flag.String("create", "migration", "The file name to create")
 }
 
 func main() {
@@ -47,14 +47,25 @@ func main() {
 		}
 	case "migrate:rollback":
 		{
-			// migrations.Rollback()
-			// fmt.Println("Database Rolled back")
+			migrations.Rollback()
+			fmt.Println("Database Rollbacked")
 		}
 	case "make:migration":
 		{
-			timestamp := time.Now().UnixNano()
-			filename := fmt.Sprintf("../database/migrations/%v_%v.go", timestamp, strcase.ToSnake(*create))
-			content := fmt.Sprintf(`package migrations
+			MakeMigration()
+		}
+	default:
+		{
+			fmt.Println("Command not found :( ")
+		}
+	}
+
+}
+
+func MakeMigration() {
+	timestamp := time.Now().UnixNano()
+	filename := fmt.Sprintf("../database/migrations/%v_%v.go", timestamp, strcase.ToSnake(*create))
+	content := fmt.Sprintf(`package migrations
 
 import "log"
 import "gogit/database"
@@ -64,33 +75,30 @@ type %v struct{}
 
 // Migrate the database to a new version
 func (%v) Migrate() {
-	db := database.NewPGInstance()
-	defer db.Close()
-	_, e := db.Exec("")
-	if e != nil {
-		log.Println(e)
-	}
+db := database.NewPGInstance()
+defer db.Close()
+_, e := db.Exec("")
+if e != nil {
+log.Println(e)
+}
 
 }
 
 // Rollback the database to previous version
 func (%v) Rollback() {
-	db := database.NewPGInstance()
-	defer db.Close()
-	_, e := db.Exec("")
-	if e != nil {
-		log.Println(e)
-	}
+db := database.NewPGInstance()
+defer db.Close()
+_, e := db.Exec("")
+if e != nil {
+log.Println(e)
+}
 
 }`, strcase.ToCamel(*create), strcase.ToCamel(*create), strcase.ToCamel(*create), strcase.ToCamel(*create))
-			f, e := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0777)
-			if e != nil {
-				fmt.Println(e)
-				os.Exit(1)
-			}
-			defer f.Close()
-			f.WriteString(content)
-		}
+	f, e := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0777)
+	if e != nil {
+		fmt.Println(e)
+		os.Exit(1)
 	}
-
+	defer f.Close()
+	f.WriteString(content)
 }

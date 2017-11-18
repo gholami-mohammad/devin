@@ -59,8 +59,10 @@ func main() {
 import "log"
 import "gogit/database"
 
+// %v Migration Struct
 type %v struct{}
 
+// Migrate the database to a new version
 func (%v) Migrate() {
 	db := database.NewPGInstance()
 	defer db.Close()
@@ -71,6 +73,7 @@ func (%v) Migrate() {
 
 }
 
+// Rollback the database to previous version
 func (%v) Rollback() {
 	db := database.NewPGInstance()
 	defer db.Close()
@@ -79,7 +82,7 @@ func (%v) Rollback() {
 		log.Println(e)
 	}
 
-}`, strcase.ToCamel(*create), strcase.ToCamel(*create), strcase.ToCamel(*create))
+}`, strcase.ToCamel(*create), strcase.ToCamel(*create), strcase.ToCamel(*create), strcase.ToCamel(*create))
 			f, e := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0777)
 			if e != nil {
 				fmt.Println(e)

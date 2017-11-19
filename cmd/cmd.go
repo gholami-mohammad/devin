@@ -64,7 +64,7 @@ func main() {
 
 func MakeMigration() {
 	timestamp := time.Now().UnixNano()
-	filename := fmt.Sprintf("../database/migrations/%v_%v.go", timestamp, strcase.ToSnake(*create))
+	filename := fmt.Sprintf("./database/migrations/%v_%v.go", timestamp, strcase.ToSnake(*create))
 	content := fmt.Sprintf(`package migrations
 
 import "log"

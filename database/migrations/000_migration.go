@@ -8,19 +8,17 @@ import (
 func Migrate() {
 	log.SetFlags(log.Lshortfile)
 
+	// TODO: DELETE THESE 2 Lines
+	CreatePublicSchema{}.Rollback()
+	CreateProjectManagementSchema{}.Rollback()
+
 	CreatePublicSchema{}.Migrate()
 	CreateProjectManagementSchema{}.Migrate()
 	CreateUserTable{}.Migrate()
 	CreateTaskStatusTable{}.Migrate()
 	CreateTaskTypeTable{}.Migrate()
-	// e = db.CreateTable(&models.TaskType{}, &opt)
-	// if e != nil {
-	// 	log.Println(e)
-	// }
-	// e = db.CreateTable(&models.Task{}, &opt)
-	// if e != nil {
-	// 	log.Println(e)
-	// }
+	CreateTaskTable{}.Migrate()
+
 	// e = db.CreateTable(&models.TaskAssignment{}, &opt)
 	// if e != nil {
 	// 	log.Println(e)
@@ -49,6 +47,7 @@ func Migrate() {
 
 // Rollback all migrations
 func Rollback() {
+	CreateTaskTable{}.Rollback()
 	CreateTaskTypeTable{}.Rollback()
 	CreateTaskStatusTable{}.Rollback()
 	CreateUserTable{}.Rollback()

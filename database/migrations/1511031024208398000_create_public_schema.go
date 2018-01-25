@@ -1,26 +1,21 @@
 package migrations
 
-import "reflect"
 import "gogit/database"
 
-func init() {
-	Migrations["CreatePublicSchema"] = reflect.TypeOf(CreatePublicSchema{})
-}
-
-// CreatePublicSchema Migration Struct
-type CreatePublicSchema struct{}
-
 // Migrate the database to a new version
-func (CreatePublicSchema) Migrate() {
+func (Migration) MigrateCreatePublicSchema() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	db.Exec("CREATE SCHEMA public;")
+	_, e = db.Exec("CREATE SCHEMA IF NOT EXISTS public;")
 
+	return
 }
 
 // Rollback the database to previous version
-func (CreatePublicSchema) Rollback() {
+func (Migration) RollbackCreatePublicSchema() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	db.Exec("DROP SCHEMA public CASCADE;")
+	_, e = db.Exec("DROP SCHEMA IF EXISTS public CASCADE;")
+
+	return
 }

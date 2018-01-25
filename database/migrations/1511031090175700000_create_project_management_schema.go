@@ -2,21 +2,18 @@ package migrations
 
 import "gogit/database"
 
-// CreateProjectManagementSchema Migration Struct
-type CreateProjectManagementSchema struct{}
-
 // Migrate the database to a new version
-func (CreateProjectManagementSchema) Migrate() {
+func (Migration) MigrateCreateProjectManagementSchema() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	db.Exec("CREATE SCHEMA project_management;")
-
+	_, e = db.Exec("CREATE SCHEMA IF NOT EXISTS pm;")
+	return
 }
 
 // Rollback the database to previous version
-func (CreateProjectManagementSchema) Rollback() {
+func (Migration) RollbackCreateProjectManagementSchema() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	db.Exec("DROP SCHEMA project_management CASCADE;")
-
+	_, e = db.Exec("DROP SCHEMA IF EXITS pm CASCADE;")
+	return
 }

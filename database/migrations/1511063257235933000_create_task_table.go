@@ -4,6 +4,10 @@ import "log"
 import "gogit/database"
 import "gogit/models"
 
+func init() {
+	// Migrations["CreateTaskTable"] = CreateTaskTable{}
+}
+
 // CreateTaskTable Migration Struct
 type CreateTaskTable struct{}
 

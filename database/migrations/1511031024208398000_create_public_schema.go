@@ -1,6 +1,11 @@
 package migrations
 
+import "reflect"
 import "gogit/database"
+
+func init() {
+	Migrations["CreatePublicSchema"] = reflect.TypeOf(CreatePublicSchema{})
+}
 
 // CreatePublicSchema Migration Struct
 type CreatePublicSchema struct{}

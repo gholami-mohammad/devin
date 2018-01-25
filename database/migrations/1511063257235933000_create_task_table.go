@@ -56,7 +56,7 @@ func (CreateTaskTable) Migrate() {
 func (CreateTaskTable) Rollback() {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e := db.Model(&models.Task{}).Exec("DROP TABLE IF EXISTS ?TableName;")
+	_, e := db.Model(&models.Task{}).Exec("DROP TABLE IF EXISTS ?TableName CASCADE;")
 	if e != nil {
 		log.Println(e)
 	}

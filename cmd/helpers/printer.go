@@ -82,13 +82,19 @@ const (
 type Printer struct{}
 
 func (Printer) Info(i ...interface{}) {
-	fmt.Println(ICyan, i, Color_Off)
+	fmt.Print(ICyan)
+	fmt.Print(i[:]...)
+	fmt.Println(Color_Off)
 }
 
 func (Printer) Success(i ...interface{}) {
-	fmt.Println(Green, i, Color_Off)
+	fmt.Print(Green)
+	fmt.Print(i[:]...)
+	fmt.Println(Color_Off)
 }
 
 func (Printer) Error(i ...interface{}) {
-	fmt.Println(Red, i, Color_Off)
+	fmt.Print(Red)
+	fmt.Print(i[:]...)
+	fmt.Println(Color_Off)
 }

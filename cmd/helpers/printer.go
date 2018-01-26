@@ -98,3 +98,8 @@ func (Printer) Error(i ...interface{}) {
 	fmt.Print(i[:]...)
 	fmt.Println(Color_Off)
 }
+func (Printer) Warning(i ...interface{}) {
+	fmt.Print(Yellow)
+	fmt.Print(i[:]...)
+	fmt.Println(Color_Off)
+}

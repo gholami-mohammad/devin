@@ -46,7 +46,7 @@ func main() {
 		}
 	case "migrate:rollback":
 		{
-			fmt.Println("Database Rollbacked")
+			helpers.Rollback()
 		}
 	case "make:migration":
 		{

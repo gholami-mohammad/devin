@@ -137,5 +137,45 @@ func Migrate() {
 
 // Rollback will rollback database using batch number
 func Rollback() {
+	checkMigrationTable()
+
+	db := database.NewPGInstance()
+	defer db.Close()
+
+	var rollbacks []migration
+	db.Model(&rollbacks).Where("batch = (select max(batch) from migrations)").Select()
+	for _, v := range rollbacks {
+		name := strcase.ToCamel(v.Name)
+		Printer{}.Warning("Rollback ", name)
+		m := migrations.Migration{}
+		val := reflect.ValueOf(m)
+		f := val.MethodByName("Rollback" + name)
+		if !f.IsValid() {
+			Printer{}.Error("Invalid rollback funciton name: Rollback" + name)
+			continue
+		}
+
+		if f.Type().NumOut() == 0 {
+			Printer{}.Error("Function must return at least one value")
+			continue
+		}
+		lastReturn := f.Type().Out(f.Type().NumOut() - 1).String()
+		if !strings.EqualFold(lastReturn, "error") {
+			Printer{}.Error("Last return value of function must be of type `error`. ", "Value of type `", lastReturn, "` returned")
+			continue
+		}
+
+		rets := f.Call(nil)
+		if len(rets) == 0 {
+			continue
+		}
+
+		if rets[0].Interface() != nil {
+			Printer{}.Error(rets[0].Interface())
+			continue
+		}
+
+		db.Delete(&v)
+	}
 
 }

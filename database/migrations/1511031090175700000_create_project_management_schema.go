@@ -14,6 +14,6 @@ func (Migration) MigrateCreateProjectManagementSchema() (e error) {
 func (Migration) RollbackCreateProjectManagementSchema() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP SCHEMA IF EXITS pm CASCADE;")
+	_, e = db.Exec("DROP SCHEMA IF EXISTS pm CASCADE;")
 	return
 }

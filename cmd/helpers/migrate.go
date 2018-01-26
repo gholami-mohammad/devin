@@ -73,6 +73,7 @@ func checkMigrationTable() {
     )`)
 }
 
+// Migrate call Migrate function of files and save batches in database
 func Migrate() {
 	checkMigrationTable()
 
@@ -81,7 +82,7 @@ func Migrate() {
 
 	files, e := ioutil.ReadDir("./database/migrations/")
 	if e != nil {
-		log.Fatalln("Error on loading migrations directory")
+		Printer{}.Error("Error on loading migrations directory")
 	}
 
 	for _, v := range files {
@@ -95,10 +96,24 @@ func Migrate() {
 		}
 
 		name := strcase.ToCamel(filename)
+		if strings.EqualFold(name, "Migration") {
+			continue
+		}
 		m := migrations.Migration{}
 		val := reflect.ValueOf(m)
 		f := val.MethodByName("Migrate" + name)
 		if !f.IsValid() {
+			Printer{}.Error("Invalid migration funciton name: Migrate" + name)
+			continue
+		}
+
+		if f.Type().NumOut() == 0 {
+			Printer{}.Error("Function must return at least one value")
+			continue
+		}
+		lastReturn := f.Type().Out(f.Type().NumOut() - 1).String()
+		if !strings.EqualFold(lastReturn, "error") {
+			Printer{}.Error("Last return value of function must be of type `error`. ", "Value of type `", lastReturn, "` returned")
 			continue
 		}
 
@@ -117,5 +132,10 @@ func Migrate() {
 	}
 
 	db.Exec("update migrations set batch=coalesce((select max(batch) from migrations) , 0)+1 where batch is null;")
+
+}
+
+// Rollback will rollback database using batch number
+func Rollback() {
 
 }

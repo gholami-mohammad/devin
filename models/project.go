@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// Project is the ORM model to interact with projects table in database
 type Project struct {
 	tableName               struct{}         `sql:"projects"`
 	ID                      uint64           `doc:"Auto increment ID"`

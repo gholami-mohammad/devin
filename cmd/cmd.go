@@ -6,8 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"gogit/database/seeders"
-
 	"gogit/cmd/helpers"
 )
 
@@ -41,7 +39,6 @@ func main() {
 		}
 	case "db:seed":
 		{
-			seeders.Seed()
 			fmt.Println("Seed finished")
 		}
 	case "migrate:rollback":

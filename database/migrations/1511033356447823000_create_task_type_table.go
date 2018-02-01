@@ -2,7 +2,6 @@ package migrations
 
 import "log"
 import "gogit/database"
-import "gogit/models"
 
 func init() {
 	// Migrations["CreateTaskTypeTable"] = CreateTaskTypeTable{}
@@ -15,7 +14,7 @@ type CreateTaskTypeTable struct{}
 func (CreateTaskTypeTable) Migrate() {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e := db.Model(&models.TaskType{}).Exec(`CREATE TABLE IF NOT EXISTS ?TableName (
+	_, e := db.Exec(`CREATE TABLE IF NOT EXISTS ?TableName (
     id serial NOT NULL,
     name varchar(255),
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
@@ -33,7 +32,7 @@ func (CreateTaskTypeTable) Migrate() {
 func (CreateTaskTypeTable) Rollback() {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e := db.Model(&models.TaskType{}).Exec("DROP TABLE IF EXISTS ?TableName")
+	_, e := db.Exec("DROP TABLE IF EXISTS ?TableName")
 	if e != nil {
 		log.Println(e)
 	}

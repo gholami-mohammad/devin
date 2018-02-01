@@ -2,7 +2,6 @@ package migrations
 
 import "log"
 import "gogit/database"
-import "gogit/models"
 
 func init() {
 	// Migrations["CreateTaskAssignmentTable"] = CreateTaskAssignmentTable{}
@@ -15,7 +14,7 @@ type CreateTaskAssignmentTable struct{}
 func (CreateTaskAssignmentTable) Migrate() {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e := db.Model(&models.TaskAssignment{}).Exec(`CREATE TABLE IF NOT EXISTS ?TableName (
+	_, e := db.Exec(`CREATE TABLE IF NOT EXISTS ?TableName (
     id bigserial NOT NULL,
     task_id bigint NOT NULL,
     assign_to_user_id bigint NOT NULL,
@@ -47,7 +46,7 @@ func (CreateTaskAssignmentTable) Migrate() {
 func (CreateTaskAssignmentTable) Rollback() {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e := db.Model(&models.TaskAssignment{}).Exec(`DROP TABLE IF EXISTS ?TableName;`)
+	_, e := db.Exec(`DROP TABLE IF EXISTS ?TableName;`)
 	if e != nil {
 		log.Println(e)
 	}

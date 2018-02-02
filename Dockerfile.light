@@ -1,0 +1,5 @@
+FROM alpine:3.7
+ENV PATH="/usr/gogit:${PATH}"
+RUN mkdir /usr/gogit
+COPY gogit /usr/gogit
+CMD gogit

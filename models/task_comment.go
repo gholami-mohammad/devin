@@ -2,12 +2,12 @@ package models
 
 import "time"
 
-type MilestoneComment struct {
+type TaskComment struct {
 	ID             uint64
-	MilestoneID    uint64
-	Milestone      *Milestone
+	TaskID         uint64
+	Task           *Task
 	ReplyToID      uint64
-	ReplyTo        *MilestoneComment
+	ReplyTo        *TaskComment
 	Comment        string
 	AttachmentPath string
 	CreatedByID    uint64

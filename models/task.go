@@ -27,6 +27,7 @@ type Task struct {
 	TaskBoardID             uint
 	TaskBoard               *TaskBoard
 	SpentTimes              []*TaskSpentTime
+	Comments                []*TaskComment
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
 	DeletedAt               *time.Time

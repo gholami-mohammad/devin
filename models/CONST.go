@@ -1,0 +1,11 @@
+package models
+
+const (
+	MODULE_PROJECT       = 1
+	MODULE_TASK          = 2
+	MODULE_MILESTONE     = 3
+	MODULE_REPOSITORY    = 4
+	MODULE_SPENT_TIME    = 5
+	MODULE_ISSUE_TRACKER = 6
+	MODULE_BUG_TRACKER   = 7
+)

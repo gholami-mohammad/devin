@@ -7,6 +7,7 @@ import (
 type Task struct {
 	ID                      uint64
 	Title                   string
+	OrderID                 uint `doc:"شماره ترتیب قرارگیری در لیست"`
 	Description             string
 	AssigneID               uint64
 	Assigne                 *User
@@ -26,6 +27,7 @@ type Task struct {
 	Reminders               []*TaskReminder
 	TaskBoardID             uint
 	TaskBoard               *TaskBoard
+	Tags                    []*TaggedObject `doc:"A HasMany relation, where ModuleID = models.MODULE_TASK"`
 	SpentTimes              []*TaskSpentTime
 	Comments                []*TaskComment
 	CreatedAt               time.Time

@@ -15,6 +15,7 @@ type Issue struct {
 	Assigne             *User
 	StatusID            uint
 	Status              *IssueStatus
+	Comments            []*IssueComment
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 	DeletedAt           *time.Time

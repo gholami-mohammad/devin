@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type UserCompanyMapping struct {
+type UserCompany struct {
 	tableName   struct{} `sql:"user_company_mappings"`
 	ID          uint64
 	UserID      uint64 `doc:"ID of users record with type=1"`

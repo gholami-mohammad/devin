@@ -9,8 +9,6 @@ type Task struct {
 	Title                   string
 	OrderID                 uint `doc:"شماره ترتیب قرارگیری در لیست"`
 	Description             string
-	AssigneID               uint64
-	Assigne                 *User
 	ScheduledStartDate      time.Time
 	ScheduledCompletionDate time.Time
 	StartDate               time.Time
@@ -30,6 +28,7 @@ type Task struct {
 	Tags                    []*TaggedObject `doc:"A HasMany relation, where ModuleID = models.MODULE_TASK"`
 	SpentTimes              []*TaskSpentTime
 	Comments                []*TaskComment
+	Assignes                []*TaskAssigne
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
 	DeletedAt               *time.Time

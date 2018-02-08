@@ -29,6 +29,8 @@ type Task struct {
 	SpentTimes              []*TaskSpentTime
 	Comments                []*TaskComment
 	Assignes                []*TaskAssigne
+	CreatedByID             uint64
+	CreatedBy               *User
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
 	DeletedAt               *time.Time

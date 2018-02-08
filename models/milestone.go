@@ -14,6 +14,8 @@ type Milestone struct {
 	Tags             []*TaggedObject     `doc:"A HasMany relation, where ModuleID = models.MODULE_MILESTONE"`
 	Comments         []*MilestoneComment `doc:"hasMany"`
 	TaskLists        []*TaskList         `pg:"many2many:milestone_tasklists"`
+	CreatedByID      uint64
+	CreatedBy        *User
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	DeletedAt        *time.Time

@@ -13,6 +13,8 @@ type TaskSpentTime struct {
 	IsBillable  bool
 	IsBilled    bool
 	Description string
+	CreatedByID uint64
+	CreatedBy   *User
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time

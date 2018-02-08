@@ -11,6 +11,8 @@ type TaskList struct {
 	AllowedUsers []*User
 	MilestoneID  uint64     `doc:"This task is belong to which milestone"`
 	Milestone    *Milestone ``
+	CreatedByID  uint64
+	CreatedBy    *User
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    *time.Time

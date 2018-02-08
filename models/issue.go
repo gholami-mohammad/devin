@@ -16,6 +16,8 @@ type Issue struct {
 	StatusID            uint
 	Status              *IssueStatus
 	Comments            []*IssueComment
+	CreatedByID         uint64
+	CreatedBy           *User
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 	DeletedAt           *time.Time

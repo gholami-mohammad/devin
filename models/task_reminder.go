@@ -11,6 +11,8 @@ type TaskReminder struct {
 	Title             string
 	RemindeOn         time.Time
 	ReminderReceivers []*TaskReminderReceiver
+	CreatedByID       uint64
+	CreatedBy         *User
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 }

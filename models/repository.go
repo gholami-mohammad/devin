@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type Repository struct {
 	ID                     uint64
 	OwnerID                uint64
@@ -25,4 +27,9 @@ type Repository struct {
 	ForkedFromRepositoryID uint64
 	ForkedFromRepository   *Repository
 	Contributers           []*RepositoryContributer
+	CreatedByID            uint64
+	CreatedBy              *User
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+	DeletedAt              *time.Time
 }

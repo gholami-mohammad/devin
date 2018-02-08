@@ -29,6 +29,11 @@ type Project struct {
 	ProjectManagerID        uint64 `doc:"مدیر پروژه و مسئول این پروژه کیست"`
 	ProjectManager          *User
 	GitRepositories         []*Repository
+	CreatedByID             uint64
+	CreatedBy               *User
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
+	DeletedAt               *time.Time
 
 	EnableWiki         bool
 	AllowPublicWiki    bool `doc:"If wiki is enable, Is it public?"`
@@ -47,8 +52,4 @@ type Project struct {
 	AllowPublicBugs    bool
 	EnableIssueTracker bool
 	AllowPublicIssues  bool
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
 }

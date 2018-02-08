@@ -2,6 +2,7 @@ package models
 
 import "time"
 
+//ProjectStatus : active, archived, pending, etc
 type ProjectStatus struct {
 	ID        uint
 	Status    string

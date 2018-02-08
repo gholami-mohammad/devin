@@ -1,9 +1,10 @@
 package main
 
 import (
-	"gogit/models"
 	"log"
 	"net/http"
+
+	"gogit/models"
 )
 
 func main() {

@@ -20,8 +20,8 @@ type Task struct {
 	BackgroundColor         string
 	Progress                float32
 	EstimatedTime           time.Duration
-	Followers               []*User `pg:"many2many:task_followers"`
-	PrerequisiteTasks       []*Task `pg:"many2many:task_prerequisites"`
+	Followers               []*TaskFollower
+	PrerequisiteTasks       []*TaskPrerequisite
 	Reminders               []*TaskReminder
 	TaskBoardID             uint
 	TaskBoard               *TaskBoard

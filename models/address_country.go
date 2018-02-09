@@ -5,7 +5,7 @@ import (
 )
 
 type Country struct {
-	tableName   struct{} `sql:"public.countries"`
+	tableName   struct{} `sql:"public.address_countries"`
 	ID          uint
 	Name        string `doc:"The country name e.g Iran"`
 	PhonePrefix string `doc:"Phone numbers prefix e.g +98 for IRAN"`

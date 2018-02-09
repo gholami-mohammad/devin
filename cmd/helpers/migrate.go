@@ -86,22 +86,27 @@ func Migrate() {
 	}
 
 	for _, v := range files {
+		if v.IsDir() {
+			continue
+		}
 		var mg migration
 		filename := strings.TrimSuffix(v.Name(), ".go")
+		undescoreIndex := strings.Index(filename, "_")
+		filename = filename[undescoreIndex+1:]
+		name := strcase.ToCamel(filename)
+		if strings.EqualFold(name, "Migration") {
+			continue
+		}
 		db.Model(&mg).Where("name LIKE ?", filename).First()
 
 		if mg.ID != 0 {
 			//This file already migrated
 			continue
 		}
-
-		name := strcase.ToCamel(filename)
-		if strings.EqualFold(name, "Migration") {
-			continue
-		}
 		m := migrations.Migration{}
 		val := reflect.ValueOf(m)
-		f := val.MethodByName("Migrate" + name)
+		funcName := "Migrate" + name
+		f := val.MethodByName(funcName)
 		if !f.IsValid() {
 			Printer{}.Error("Invalid migration funciton name: Migrate" + name)
 			continue
@@ -118,11 +123,10 @@ func Migrate() {
 		}
 
 		rets := f.Call(nil)
-		if len(rets) == 0 {
-			continue
-		}
+		ee := rets[f.Type().NumOut()-1].Interface()
 
-		if rets[0].Interface() != nil {
+		if rets[f.Type().NumOut()-1].Interface() != nil {
+			Printer{}.Error(funcName, " exited with error: ", ee)
 			continue
 		}
 

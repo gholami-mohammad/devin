@@ -17,7 +17,7 @@ func (Migration) MigrateAddressCountry() (e error) {
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp with time zone,
-    CONSTRAINT public_address_countries_pkey PRIMARY KEY (id)
+    CONSTRAINT address_countries_pkey PRIMARY KEY (id)
     );`)
 	return
 }

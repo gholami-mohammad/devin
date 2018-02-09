@@ -133,6 +133,8 @@ func Migrate() {
 		// save migrated file to DB
 		mg.Name = filename
 		db.Insert(&mg)
+
+		Printer{}.Success(funcName, " Migrated")
 	}
 
 	db.Exec("update migrations set batch=coalesce((select max(batch) from migrations) , 0)+1 where batch is null;")

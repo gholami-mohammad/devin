@@ -15,7 +15,7 @@ func (Migration) MigrateAddressProvincesTable() (e error) {
     deleted_at timestamp with time zone,
 
     CONSTRAINT address_provinces_pkey PRIMARY KEY (id),
-    CONSTRAINT address_provinces_id_address_country_id FOREIGN KEY (country_id)
+    CONSTRAINT address_provinces_country_id_address_countries_id FOREIGN KEY (country_id)
         REFERENCES public.address_countries (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE

@@ -9,28 +9,18 @@ import (
 	"gogit/cmd/helpers"
 )
 
-var (
-	create  *string
-	command *string
-)
-
-// Basic flag declarations are available for string, integer, and boolean options.
-func init() {
-	command = flag.String("run", "", "The command")
-	create = flag.String("create", "migration", "The file name to create")
-}
-
 func main() {
 
 	flag.Parse()
+	command := flag.Arg(0)
 
-	if strings.EqualFold(*command, "") {
+	if strings.EqualFold(command, "") {
 		fmt.Println("No command specified")
 		os.Exit(1)
 	}
-	fmt.Println("loading ", *command)
+	fmt.Println("loading ", command)
 
-	switch *command {
+	switch command {
 
 	case "migrate":
 		{
@@ -47,7 +37,15 @@ func main() {
 		}
 	case "make:migration":
 		{
-			helpers.MakeMigration(create)
+			set := flag.NewFlagSet("make:migrate", flag.ContinueOnError)
+			name := set.String("create", "", "make:migrate --create=migration_name")
+			set.Parse(os.Args[2:])
+
+			if strings.EqualFold(*name, "") {
+				os.Exit(1)
+				return
+			}
+			helpers.MakeMigration(name)
 		}
 	default:
 		{

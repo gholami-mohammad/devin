@@ -6,7 +6,7 @@ import "gogit/database"
 func (Migration) MigrateAddressProvincesTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.provinces (
+	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.address_provinces (
     id serial NOT NULL,
     name varchar(255),
     country_id integer NOT NULL,
@@ -29,7 +29,7 @@ func (Migration) MigrateAddressProvincesTable() (e error) {
 func (Migration) RollbackAddressProvincesTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.provinces;")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.address_provinces;")
 
 	return
 }

@@ -19,7 +19,7 @@ type Project struct {
 	CompletionDate          *time.Time      `doc:"تاریخ واقعی اتمام پروژه که توسط مدیر کل پروژه این تاریخ ثبت میشود"`
 	Users                   []*ProjectUser  `doc:"List of users who can access this project. This list must be from the company peoples."`
 	Tags                    []*TaggedObject `doc:"A HasMany relation, where ModuleID = models.MODULE_PROJECT"`
-	DefaultTaskView         uint            `doc:"For now, 2 task view is availabel: 1=List view ; 2=Board view"`
+	DefaultTaskViewID       uint            `doc:"For now, 2 task view is availabel: 1=List view ; 2=Board view"`
 	StatusID                uint            `doc:"active, archived, pending, etc"`
 	Status                  *ProjectStatus
 	OwnerUserID             uint64 `doc:"مالک وسازنده ی این پروژه"`
@@ -35,21 +35,21 @@ type Project struct {
 	UpdatedAt               time.Time
 	DeletedAt               *time.Time
 
-	EnableWiki         bool
-	AllowPublicWiki    bool `doc:"If wiki is enable, Is it public?"`
-	EnableTask         bool
-	EnableMilestones   bool
-	EnableFiles        bool
-	EnableMessages     bool
-	EnableTime         bool
-	EnableNotebooks    bool
-	EnableRisks        bool
-	EnableLinks        bool
-	EnableBillings     bool
-	EnableComments     bool
-	EnableGit          bool
-	EnableBugTracker   bool
-	AllowPublicBugs    bool
-	EnableIssueTracker bool
-	AllowPublicIssues  bool
+	EnableWikiModule         bool
+	AllowPublicWiki          bool `doc:"If wiki is enable, Is it public?"`
+	EnableTasksModule        bool
+	EnableMilestonesModule   bool
+	EnableFilesModule        bool
+	EnableMessagesModule     bool
+	EnableTimeLogsModule     bool
+	EnableNotebooksModule    bool
+	EnableRisksModule        bool
+	EnableLinksModule        bool
+	EnableBillingModule      bool
+	EnableGitModule          bool
+	EnableIssueTrackerModule bool
+	AllowPublicIssues        bool
+	EnableBugTrackerModule   bool
+	AllowPublicBugs          bool
+	EnableProjectComments    bool
 }

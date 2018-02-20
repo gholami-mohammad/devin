@@ -48,6 +48,7 @@ func (Migration) MigrateProjectsTable() (e error) {
     CHECK (start_date <= completion_date),
     CHECK (default_task_view_id = 1 OR default_task_view_id = 2),
 
+    CONSTRAINT projects_pkey PRIMARY KEY (id),
     CONSTRAINT projects_key UNIQUE (name),
 
     CONSTRAINT projects_status_id_project_statuses_id FOREIGN KEY (status_id)

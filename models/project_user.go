@@ -5,7 +5,7 @@ import (
 )
 
 type ProjectUser struct {
-	tableName               struct{} `sql:"peoject_users"`
+	tableName               struct{} `sql:"project_users"`
 	ID                      uint64
 	UserID                  uint64 `doc:"ID of users record with type=1"`
 	User                    *User
@@ -13,9 +13,6 @@ type ProjectUser struct {
 	Project                 *Project
 	CreatedByID             uint64 `doc:"Who add this user to this project?"`
 	CreatedBy               *User
-	CreatedAt               time.Time
-	UpdatedAt               time.Time
-	DeletedAt               *time.Time
 	IsAdmin                 bool `doc:"Full access to all project features"`
 	CanUpdateProjectProfile bool `doc:"امکان ویرایش اطلاعات پروژه"`
 	CanAddUserToProject     bool
@@ -30,4 +27,7 @@ type ProjectUser struct {
 	CanCreateTimeLog        bool `doc:"Log times spend on task o project"`
 	CanListAllTimeLogs      bool
 	CanCreateWiki           bool
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
+	DeletedAt               *time.Time
 }

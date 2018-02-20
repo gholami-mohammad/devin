@@ -19,9 +19,9 @@ func (Migration) MigrateUsersTable() (e error) {
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp with time zone,
 
-    CONSTRAINT users_pkey PRIMARY KEY (id)
-    CONSTRAINT users_username_key UNIQUE (username)
-    CONSTRAINT users_email_key UNIQUE (email)
+    CONSTRAINT users_pkey PRIMARY KEY (id),
+    CONSTRAINT users_username_key UNIQUE (username),
+    CONSTRAINT users_email_key UNIQUE (email),
     CONSTRAINT users_owner_id_users_id FOREIGN KEY (owner_id)
         REFERENCES public.users (id)
         ON DELETE CASCADE

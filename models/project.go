@@ -10,8 +10,6 @@ type Project struct {
 	ID                      uint64          `doc:"Auto increment ID"`
 	Name                    string          `doc:"Unique name of the project. Unique rule is : a-z, A-Z, 0-9, dash(-), underscore(_) "`
 	Title                   string          `doc:"Nullable, Like name without any naming rule."`
-	OwnerID                 uint64          `doc:"کد یکتای مالک و سازنده ی پروژه"`
-	Owner                   *User           ``
 	Description             string          `doc:"Nullable, Full description of project. Possible to link to a notebook."`
 	ScheduledStartDate      *time.Time      `doc:"تاریخ پیش بینی شده برای شروع پروژه"`
 	StartDate               *time.Time      `doc:"تاریخ شروع پروژه"`

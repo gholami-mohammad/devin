@@ -5,15 +5,16 @@ import (
 )
 
 type Milestone struct {
+	tableName        struct{} `sql:"public.milestones"`
 	ID               uint64
 	Name             string
 	DueDate          time.Time                   `doc:"تاریخ دستیابی به هدف"`
 	Description      string                      `doc:"Full description about the milestone"`
 	ResponsibleUsers []*MilestoneResponsibleUser ``
-	Followers        []*MilestoneFollower        `pg:"many2many:milestone_followers"`
+	Followers        []*MilestoneFollower        ``
 	Tags             []*TaggedObject             `doc:"A HasMany relation, where ModuleID = models.MODULE_MILESTONE"`
 	Comments         []*MilestoneComment         `doc:"HasMany relation"`
-	TaskLists        []*TaskList                 `pg:"many2many:milestone_tasklists"`
+	TaskLists        []*MilestoneTaskList        ``
 	CreatedByID      uint64
 	CreatedBy        *User
 	CreatedAt        time.Time

@@ -3,6 +3,7 @@ package models
 import "time"
 
 type MilestoneResponsibleUser struct {
+	talbeName   struct{} `sql:"public.milestone_responsible_users"`
 	ID          uint64
 	MilestoneID uint64
 	Milestone   *Milestone

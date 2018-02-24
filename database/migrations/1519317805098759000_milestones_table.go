@@ -30,7 +30,7 @@ func (Migration) MigrateMilestonesTable() (e error) {
 func (Migration) RollbackMilestonesTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.milestones;")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.milestones CASCADE;")
 
 	return
 }

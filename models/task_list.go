@@ -5,6 +5,7 @@ import (
 )
 
 type TaskList struct {
+	tableName    struct{} `sql:"public.task_lists"`
 	ID           uint64
 	Name         string
 	Description  string

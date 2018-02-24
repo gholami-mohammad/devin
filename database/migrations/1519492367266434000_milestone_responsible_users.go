@@ -22,7 +22,7 @@ func (Migration) MigrateMilestoneResponsibleUsers() (e error) {
         REFERENCES public.users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-    CONSTRAINT milestone_responsible_users_created_by_id_users_id FOREIGN KEY (user_id)
+    CONSTRAINT milestone_responsible_users_created_by_id_users_id FOREIGN KEY (created_by_id)
         REFERENCES public.users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE

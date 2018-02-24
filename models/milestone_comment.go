@@ -3,6 +3,7 @@ package models
 import "time"
 
 type MilestoneComment struct {
+	tableName      struct{} `sql:"public.milestone_comments"`
 	ID             uint64
 	MilestoneID    uint64
 	Milestone      *Milestone

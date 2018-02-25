@@ -35,7 +35,7 @@ func (Migration) MigrateMilestoneTaskListTable() (e error) {
 func (Migration) RollbackMilestoneTaskListTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.milestone_task_lists;")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.milestone_task_lists CASCADE;")
 
 	return
 }

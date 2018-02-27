@@ -3,6 +3,7 @@ package models
 import "time"
 
 type TaskBoard struct {
+	tableName   struct{} `sql:"public.task_boards"`
 	ID          uint64
 	Name        string
 	ProjectID   uint64

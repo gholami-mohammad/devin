@@ -6,7 +6,7 @@ import "gogit/database"
 func (Migration) MigrateTaskPrioritiesTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_priopities(
+	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_priorities(
     id serial NOT NULL,
     title varchar(255) NOT NULL,
     color varchar(7),

@@ -5,6 +5,7 @@ import (
 )
 
 type Task struct {
+	tableName               struct{} `sql:"public.tasks"`
 	ID                      uint64
 	Title                   string
 	OrderID                 uint `doc:"شماره ترتیب قرارگیری در لیست"`
@@ -18,7 +19,7 @@ type Task struct {
 	Priority                *TaskPriority
 	FontColor               string
 	BackgroundColor         string
-	Progress                float32
+	Progress                int
 	EstimatedTime           time.Duration
 	Followers               []*TaskFollower
 	PrerequisiteTasks       []*TaskPrerequisite

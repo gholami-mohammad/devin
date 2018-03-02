@@ -3,6 +3,7 @@ package models
 import "time"
 
 type TaskComment struct {
+	tableName      struct{} `sql:"public.task_comments"`
 	ID             uint64
 	TaskID         uint64
 	Task           *Task

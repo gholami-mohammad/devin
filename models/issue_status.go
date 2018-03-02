@@ -13,7 +13,7 @@ type IssueStatus struct {
 	ID                      uint
 	Title                   string
 	SetAsInProgressDateTime *time.Time
-	SetAsResolvedDateTiem   *time.Time
+	SetAsResolvedDateTime   *time.Time
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
 	DeletedAt               *time.Time

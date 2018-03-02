@@ -4,8 +4,8 @@ import "time"
 
 type IssueComment struct {
 	ID             uint64
-	MilestoneID    uint64
-	Milestone      *Issue
+	IssueID        uint64
+	Issue          *Issue
 	ReplyToID      uint64
 	ReplyTo        *IssueComment
 	Comment        string

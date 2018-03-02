@@ -33,7 +33,7 @@ func (Migration) MigrateTaskRemindersTable() (e error) {
 func (Migration) RollbackTaskRemindersTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.task_reminders;")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.task_reminders CASCADE;")
 
 	return
 }

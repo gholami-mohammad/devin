@@ -3,6 +3,7 @@ package models
 import "time"
 
 type TaskReminderReceiver struct {
+	tableName         struct{} `sql:"public.task_reminder_receivers"`
 	ID                uint64
 	ReminderID        uint64
 	Reminder          *TaskReminder
@@ -12,5 +13,4 @@ type TaskReminderReceiver struct {
 	CreatedByID       uint64
 	CreatedBy         *User
 	CreatedAt         time.Time
-	UpdatedAt         time.Time
 }

@@ -38,14 +38,14 @@ func main() {
 	case "make:migration":
 		{
 			set := flag.NewFlagSet("make:migrate", flag.ContinueOnError)
-			name := set.String("create", "", "make:migrate --create=migration_name")
 			set.Parse(os.Args[2:])
+			name := set.Arg(0)
 
-			if strings.EqualFold(*name, "") {
+			if strings.EqualFold(name, "") {
 				os.Exit(1)
 				return
 			}
-			helpers.MakeMigration(name)
+			helpers.MakeMigration(&name)
 		}
 	default:
 		{

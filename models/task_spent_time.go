@@ -3,6 +3,7 @@ package models
 import "time"
 
 type TaskSpentTime struct {
+	talbelName  struct{} `sql:"public.task_spent_times"`
 	ID          uint64
 	SpentByID   uint64 `doc:"automatically set to current user"`
 	SpentBy     *User

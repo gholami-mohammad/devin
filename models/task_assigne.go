@@ -3,6 +3,7 @@ package models
 import "time"
 
 type TaskAssignment struct {
+	tableName   struct{} `sql:"public.task_assignments"`
 	ID          uint64
 	UserID      uint64
 	User        *User

@@ -12,5 +12,4 @@ type TaggedObject struct {
 	CreatedBy   *User
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	DeletedAt   *time.Time
 }

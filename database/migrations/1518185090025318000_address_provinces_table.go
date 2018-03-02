@@ -29,7 +29,7 @@ func (Migration) MigrateAddressProvincesTable() (e error) {
 func (Migration) RollbackAddressProvincesTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.address_provinces;")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.address_provinces CASCADE;")
 
 	return
 }

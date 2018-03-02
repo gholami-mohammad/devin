@@ -35,7 +35,7 @@ func (Migration) MigrateUsersTable() (e error) {
 func (Migration) RollbackUsersTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.users;")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.users CASCADE;")
 
 	return
 }

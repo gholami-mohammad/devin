@@ -23,7 +23,7 @@ func (Migration) MigrateProjectStatusTable() (e error) {
 func (Migration) RollbackProjectStatusTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.project_statuses;")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.project_statuses CASCADE;")
 
 	return
 }

@@ -84,7 +84,7 @@ func (Migration) MigrateProjectsTable() (e error) {
 func (Migration) RollbackProjectsTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.projects;")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.projects CASCADE;")
 
 	return
 }

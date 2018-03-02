@@ -26,7 +26,7 @@ func (Migration) MigrateAddressCountry() (e error) {
 func (Migration) RollbackAddressCountry() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.address_countries")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.address_countries CASCADE;")
 
 	return
 }

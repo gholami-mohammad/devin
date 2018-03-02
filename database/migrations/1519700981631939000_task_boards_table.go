@@ -34,7 +34,7 @@ func (Migration) MigrateTaskBoardsTable() (e error) {
 func (Migration) RollbackTaskBoardsTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EISTS public.task_boards CASCADE;")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.task_boards CASCADE;")
 
 	return
 }

@@ -12,8 +12,6 @@ func (Migration) MigrateTaskAssignmentsTable() (e error) {
     task_id bigint NOT NULL,
     created_by_id bigint NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    deleted_at timestamp with time zone,
 
     CONSTRAINT task_assignments_pkey PRIMARY KEY (id),
     CONSTRAINT task_assignments_user_id_users_id FOREIGN KEY (user_id)

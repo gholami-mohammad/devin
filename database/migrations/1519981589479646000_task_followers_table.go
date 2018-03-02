@@ -12,8 +12,7 @@ func (Migration) MigrateTaskFollowersTable() (e error) {
     user_id bigint NOT NULL,
     created_by_id bigint NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    deleted_at timestamp with time zone,
+    
     CONSTRAINT task_followers_pkey PRIMARY KEY (id),
     CONSTRAINT task_followers_task_id_tasks_id FOREIGN KEY (task_id)
         REFERENCES public.tasks (id) MATCH SIMPLE

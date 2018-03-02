@@ -5,6 +5,7 @@ import (
 )
 
 type TaskAttachment struct {
+	tableName   struct{} `sql:"public.task_attachments"`
 	ID          uint64
 	FilePath    string
 	TaskID      uint64

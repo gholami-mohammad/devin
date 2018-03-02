@@ -50,7 +50,7 @@ func (Migration) MigrateTasksTable() (e error) {
 func (Migration) RollbackTasksTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.tasks;")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.tasks CASCADE;")
 
 	return
 }

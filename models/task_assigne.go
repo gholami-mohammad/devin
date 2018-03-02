@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type TaskAssigne struct {
+type TaskAssignment struct {
 	ID          uint64
 	UserID      uint64
 	User        *User

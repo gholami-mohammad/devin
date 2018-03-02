@@ -29,7 +29,7 @@ type Task struct {
 	Tags                    []*TaggedObject `doc:"A HasMany relation, where ModuleID = models.MODULE_TASK"`
 	SpentTimes              []*TaskSpentTime
 	Comments                []*TaskComment
-	Assignes                []*TaskAssigne
+	Assignments             []*TaskAssignment
 	CreatedByID             uint64
 	CreatedBy               *User
 	CreatedAt               time.Time

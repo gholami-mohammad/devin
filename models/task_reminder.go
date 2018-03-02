@@ -5,6 +5,7 @@ import (
 )
 
 type TaskReminder struct {
+	tableName         struct{} `sql:"public.task_reminders"`
 	ID                uint64
 	TaskID            uint64
 	Task              *Task

@@ -3,6 +3,7 @@ package models
 import "time"
 
 type Repository struct {
+	tableName              struct{} `sql:"public.repositories"`
 	ID                     uint64
 	OwnerID                uint64
 	Owner                  *User `doc:"مالک این مخزن میتواند یک فرد یا یک سازمان باشد."`
@@ -13,7 +14,7 @@ type Repository struct {
 	Description            string   `doc:"A breif description about the project repositpry. It is diffrent from README.md file"`
 	Website                string   `doc:"Offical website of the project"`
 	DefaultBranch          string
-	ByteSize               float32
+	ByteSize               uint64
 	WatchesCount           uint
 	StarsCount             uint
 	IssuesCount            uint

@@ -20,6 +20,7 @@ import "time"
 //
 // Guest: تنها اجازه ی دیدن سورس کد را دارد و امکان هیچ ویرایشی برای وی وجود ندارد مگر در پروژه های عمومی
 type GitRole struct {
+	tableName struct{} `sql:"public.git_roles"`
 	ID        uint
 	Name      string
 	CreatedAt time.Time

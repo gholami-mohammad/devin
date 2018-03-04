@@ -3,6 +3,7 @@ package models
 import "time"
 
 type IssueLabel struct {
+	tableName   struct{} `sql:"public.issue_labels"`
 	ID          uint64
 	Label       string
 	Color       string

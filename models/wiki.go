@@ -3,6 +3,7 @@ package models
 import "time"
 
 type Wiki struct {
+	tableName    struct{} `sql:"public.wikis"`
 	ID           uint64
 	Name         string
 	ProjectID    uint64

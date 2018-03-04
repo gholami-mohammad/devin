@@ -18,19 +18,19 @@ func (Migration) MigrateRepositoryContributersTable() (e error) {
 
     CONSTRAINT repository_contributers_pkey PRIMARY KEY(id),
     CONSTRAINT repository_contributers_repository_id_repositories_id FOREIGN KEY (repository_id)
-        REFERENCES repositories (id)
+        REFERENCES public.repositories (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT repository_contributers_user_id_users_id FOREIGN KEY (user_id)
-        REFERENCES users (id)
+        REFERENCES public.users (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT repository_contributers_role_id_git_roles_id FOREIGN KEY (role_id)
-        REFERENCES git_roles (id)
+        REFERENCES public.git_roles (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT repository_contributers_created_by_id_users_id FOREIGN KEY (created_by_id)
-        REFERENCES users (id)
+        REFERENCES public.users (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE
     )`)

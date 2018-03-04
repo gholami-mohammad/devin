@@ -3,6 +3,7 @@ package models
 import "time"
 
 type WikiPage struct {
+	tableName   struct{} `sql:"public.wiki_pages"`
 	ID          uint64
 	WikiID      uint64
 	Wiki        *Wiki

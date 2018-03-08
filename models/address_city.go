@@ -5,7 +5,7 @@ import (
 )
 
 type City struct {
-	tableName  struct{} `sql:"public.cities"`
+	tableName  struct{} `sql:"public.address_cities"`
 	ID         uint
 	Name       string
 	ProvinceID uint      `doc:"FK to provinces table"`

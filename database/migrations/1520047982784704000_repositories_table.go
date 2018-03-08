@@ -61,7 +61,7 @@ func (Migration) MigrateRepositoriesTable() (e error) {
 func (Migration) RollbackRepositoriesTable() (e error) {
 	db := database.NewPGInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.repositories;")
+	_, e = db.Exec("DROP TABLE IF EXISTS public.repositories CASCADE;")
 
 	return
 }

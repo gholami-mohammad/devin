@@ -76,7 +76,7 @@ func (Migration) MigrateUsersTable() (e error) {
     CONSTRAINT users_city_id_address_cities_id FOREIGN KEY (city_id)
         REFERENCES public.address_cities (id)
         ON DELETE CASCADE
-        ON UPDATE CASCADE,
+        ON UPDATE CASCADE
     );`)
 
 	return

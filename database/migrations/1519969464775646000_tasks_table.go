@@ -15,6 +15,7 @@ func (Migration) MigrateTasksTable() (e error) {
     scheduled_completion_date timestamp with time zone,
     start_date timestamp with time zone,
     completion_date timestamp with time zone,
+    completed_successfully bool DEFAULT true,
     priority_id integer,
     font_color varchar(25),
     background_color varchar(25),

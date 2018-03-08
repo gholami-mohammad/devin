@@ -13,7 +13,8 @@ type Task struct {
 	ScheduledStartDate      time.Time
 	ScheduledCompletionDate time.Time
 	StartDate               time.Time
-	CompletionDate          time.Time
+	CompletionDate          time.Time `doc:"تاریخ تکمیل شدن تسک"`
+	CompletedSuccessfully   bool      `doc:"true for 'success' on completion, false for 'fail' on completion"`
 	Attachments             []*TaskAttachment
 	PriorityID              uint
 	Priority                *TaskPriority

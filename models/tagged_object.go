@@ -3,6 +3,7 @@ package models
 import "time"
 
 type TaggedObject struct {
+	tableName   struct{} `sql:"public.tagged_objects"`
 	ID          uint64
 	TagID       uint64
 	Tag         *Tag
@@ -11,5 +12,4 @@ type TaggedObject struct {
 	CreatedByID uint64
 	CreatedBy   *User
 	CreatedAt   time.Time
-	UpdatedAt   time.Time
 }

@@ -23,7 +23,7 @@ docker build -t gogit:light -f Dockerfile.light .
 
 <p dir="rtl">
 این مرحله تنها یک بار لازم است اجرا شود.
-پس از ساخت شده  image
+پس از ساخته شدن image
 دستور زیر را اجرا کنید:
 </p>
 
@@ -36,7 +36,7 @@ make docker-light
 </h3>
 
 ```
-make docker
+make docker-go
 ```
 
 <h3 dir="rtl">

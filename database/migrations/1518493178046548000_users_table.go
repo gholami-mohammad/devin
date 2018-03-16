@@ -16,6 +16,8 @@ func (Migration) MigrateUsersTable() (e error) {
     avatar varchar(200),
     owner_id bigint,
     password varchar(512),
+    email_verified bool,
+    email_verification_token varchar(200),
 
     job_title varchar(150),
     localization_language_id integer,
@@ -25,6 +27,7 @@ func (Migration) MigrateUsersTable() (e error) {
     office_phone_country_code_id integer,
     home_phone_country_code_id integer,
     cell_phone_country_code_id integer,
+    fax_country_code_id integer,
     country_id integer,
     province_id integer,
     city_id integer,
@@ -63,6 +66,10 @@ func (Migration) MigrateUsersTable() (e error) {
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT users_cell_phone_country_code_id_address_countries_id FOREIGN KEY (cell_phone_country_code_id)
+        REFERENCES public.address_countries (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT users_fax_country_code_id_address_countries_id FOREIGN KEY (fax_country_code_id)
         REFERENCES public.address_countries (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,

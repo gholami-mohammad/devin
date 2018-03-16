@@ -10,7 +10,17 @@ docker-light:
 	env GOOS=linux GOARCH=amd64 go build -v gogit
 	docker run -it -p 8080:8080 --rm gogit:light
 
+jwt_rsa_keys:
+	openssl genrsa -out auth/keys/jwt.rsa 4096
+	openssl rsa -in auth/keys/jwt.rsa -pubout > auth/keys/jwt.rsa.pub
+	echo "package keys\n" > auth/keys/jwt_rsa.go
+	echo "const JWT_RSA_PRIVATE string = \` " >> auth/keys/jwt_rsa.go
+	cat auth/keys/jwt.rsa >> auth/keys/jwt_rsa.go
+	echo "\`\n" >> auth/keys/jwt_rsa.go
+	echo "const JWT_RSA_PUBLIC string = \` " >> auth/keys/jwt_rsa.go
+	cat auth/keys/jwt.rsa.pub >> auth/keys/jwt_rsa.go
+	echo "\`\n" >> auth/keys/jwt_rsa.go
 
 test_user:
-	go test -v --coverprofile=cover.out devin/modules/user/controllers
+	go test -v --coverprofile=cover.out devin/modules/user/controllers -run TestSignin
 	go tool cover --html=cover.out

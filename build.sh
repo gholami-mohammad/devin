@@ -1,4 +1,4 @@
 #! /bin/sh
 
-go build gogit
-./gogit
+go build -v devin
+./devin

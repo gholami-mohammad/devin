@@ -1,15 +1,13 @@
 package routes
 
 import (
-	"net/http"
-
 	"github.com/gorilla/mux"
+
+	user_ctrl "devin/modules/user/controllers"
 )
 
-func LoadRoutes() *mux.Router {
-	r := mux.NewRouter()
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello from user's module"))
-	})
+func LoadRoutes(r *mux.Router) *mux.Router {
+	r.HandleFunc("/signup", user_ctrl.Signup)
+
 	return r
 }

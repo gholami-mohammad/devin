@@ -1,6 +1,6 @@
 package migrations
 
-import "gogit/database"
+import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateRepositoryContributersTable() (e error) {

@@ -1,6 +1,6 @@
 package migrations
 
-import "gogit/database"
+import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateUsersTable() (e error) {
@@ -15,6 +15,7 @@ func (Migration) MigrateUsersTable() (e error) {
     user_type integer,
     avatar varchar(200),
     owner_id bigint,
+    password varchar(512),
 
     job_title varchar(150),
     localization_language_id integer,

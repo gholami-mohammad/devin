@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"gogit/cmd/helpers"
+	"devin/cmd/helpers"
 )
 
 func main() {

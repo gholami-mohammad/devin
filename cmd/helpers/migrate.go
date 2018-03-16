@@ -11,8 +11,8 @@ import (
 
 	"github.com/iancoleman/strcase"
 
-	"gogit/database"
-	"gogit/database/migrations"
+	"devin/database"
+	"devin/database/migrations"
 )
 
 func init() {

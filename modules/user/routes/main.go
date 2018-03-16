@@ -8,6 +8,7 @@ import (
 
 func LoadRoutes(r *mux.Router) *mux.Router {
 	r.HandleFunc("/signup", user_ctrl.Signup)
+	r.HandleFunc("/signin", user_ctrl.Signin)
 
 	return r
 }

@@ -9,3 +9,8 @@ docker-go:
 docker-light:
 	env GOOS=linux GOARCH=amd64 go build -v gogit
 	docker run -it -p 8080:8080 --rm gogit:light
+
+
+test_user:
+	go test -v --coverprofile=cover.out devin/modules/user/controllers
+	go tool cover --html=cover.out

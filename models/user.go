@@ -1,8 +1,10 @@
 package models
 
 import (
+	"net/http"
 	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 
 	"devin/helpers"
@@ -14,8 +16,8 @@ type User struct {
 	ID                     uint64
 	Username               string
 	Email                  string
-	Password               string
-	UserType               uint `doc:"1: authenticatable user, 2: company"`
+	Password               string `json:"-"`
+	UserType               uint   `json:"-" doc:"1: authenticatable user, 2: company"`
 	FirstName              string
 	LastName               string
 	UserCompanyMapping     []*UserCompany `doc:"نگاشت کاربران عضو در هر کمپانی"`
@@ -23,7 +25,7 @@ type User struct {
 	OwnerID                uint64 `doc:"کد یکتای مالک و سازنده ی یک کمپانی. این فیلد برای حساب کاربری افراد میتواند خالی باشد."`
 	Owner                  *User
 	EmailVerified          bool
-	EmailVerificationToken string
+	EmailVerificationToken string `json:"-"`
 
 	/**
 	 * Profile properties
@@ -58,7 +60,7 @@ type User struct {
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt *time.Time
+	DeletedAt *time.Time `json:"-"`
 }
 
 // SetEncryptedPassword set new bcrypt password
@@ -68,7 +70,56 @@ func (user *User) SetEncryptedPassword(plainPassword string) {
 	user.Password = string(bts)
 }
 
+// SetNewEmailVerificationToken create new random string to verfy email address
 func (user *User) SetNewEmailVerificationToken() {
 	user.EmailVerified = false
 	user.EmailVerificationToken = helpers.RandomString(54)
+}
+
+// CookieLifetime get the max time of Authorization cookie.
+func (user User) CookieLifetime() time.Duration {
+	return 13 * time.Hour
+}
+
+// TokenLifetime get the max time of Authorization token
+func (user User) TokenLifetime() time.Duration {
+	return 13 * time.Hour
+}
+
+// SetAuthorizationCookie set a cookie with `Authorization` name
+func (user User) SetAuthorizationCookie(w http.ResponseWriter, value string) {
+	cookie := &http.Cookie{}
+	cookie.Name = "Authorization"
+	cookie.Secure = true
+	cookie.Value = value
+	cookie.HttpOnly = true
+	cookie.Expires = time.Now().Add(user.CookieLifetime())
+	cookie.Path = "/"
+	http.SetCookie(w, cookie)
+}
+
+// ExpireAuthorizationCookie exipre `Authorization` cookie if exists
+func (user User) ExpireAuthorizationCookie(w http.ResponseWriter) {
+	cookie := &http.Cookie{}
+	cookie.Name = "Authorization"
+	cookie.Secure = true
+	cookie.Value = ""
+	cookie.HttpOnly = true
+	cookie.Expires = time.Now().Add(-10 * time.Hour)
+	http.SetCookie(w, cookie)
+}
+
+// Token is toke structure of JWT
+type Token struct {
+	ID    uint64 `json:"user_id"`
+	Token string `json:"Token"`
+}
+
+// Claim is claim structure of JWT
+type Claim struct {
+	jwt.StandardClaims
+
+	ID       uint64 `json:"id"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
 }

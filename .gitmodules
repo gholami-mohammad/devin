@@ -1,0 +1,3 @@
+[submodule "devin_frontend"]
+	path = devin_frontend
+	url = git@github.com:m6devin/devin_frontend.git

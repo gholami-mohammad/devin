@@ -29,6 +29,7 @@ type User struct {
 	Owner                  *User
 	EmailVerified          bool
 	EmailVerificationToken string `json:"-"`
+	IsRootUser             bool
 
 	/**
 	 * Profile properties
@@ -113,13 +114,16 @@ func (user User) ExpireAuthorizationCookie(w http.ResponseWriter) {
 	http.SetCookie(w, cookie)
 }
 
-func (user User) ExtractUserFromRequestContext(r *http.Request) User {
+func (user User) ExtractUserFromRequestContext(r *http.Request) (User, error) {
 	clm := r.Context().Value("Authorization").(*Claim)
-	jsonString, _ := crypto.CBCDecrypter(clm.Payload)
+	jsonString, e := crypto.CBCDecrypter(clm.Payload)
+	if e != nil {
+		return User{}, e
+	}
 	var u User
 	json.Unmarshal([]byte(jsonString), &u)
 
-	return u
+	return u, nil
 }
 
 // Claim is claim structure of JWT

@@ -10,7 +10,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 
-	"devin/auth"
+	"devin/crypto"
 	"devin/database"
 	"devin/helpers"
 	"devin/models"
@@ -96,10 +96,19 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var claimPayload struct {
+		ID       uint64 `json:"id"`
+		Username string `json:"username"`
+		Email    string `json:"email"`
+	}
+	claimPayload.ID = user.ID
+	claimPayload.Username = user.Username
+	claimPayload.Email = user.Email
+	bts, _ := json.Marshal(&claimPayload)
+
+	payload, _ := crypto.CBCEncrypter(string(bts))
 	claims := models.Claim{
-		ID:       user.ID,
-		Email:    user.Email,
-		Username: user.Username,
+		Payload: payload,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(user.TokenLifetime()).Unix(),
 			Issuer:    "devin",
@@ -109,7 +118,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	// create a signer for rsa 512
 	t := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
 
-	sk, e := auth.GetJWTSignKey()
+	sk, e := crypto.GetJWTSignKey()
 	if e != nil {
 		err := helpers.ErrorResponse{
 			Message:   "Internal server error(load jwt)",
@@ -127,7 +136,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		helpers.NewErrorResponse(w, &err)
 		return
 	}
-	user.SetAuthorizationCookie(w, tokenString)
+	user.SetAuthorizationCookieAndHeader(w, tokenString)
 	db.Update(&user)
 
 	w.Header().Add("Content-Type", "application/json")

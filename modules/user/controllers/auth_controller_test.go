@@ -146,8 +146,9 @@ func TestSignin(t *testing.T) {
 		}
 
 		defer res.Body.Close()
-		// bts, _ = ioutil.ReadAll(res.Body)
-		// t.Log(string(bts))
+		bts, _ = ioutil.ReadAll(res.Body)
+		t.Log(string(bts))
+		t.Log(res.Header.Get("Authorization"))
 		if res.StatusCode != http.StatusOK {
 			t.Fatal("Status code not matched. Response is", res.StatusCode)
 		}

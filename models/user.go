@@ -1,12 +1,14 @@
 package models
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 
+	"devin/crypto"
 	"devin/helpers"
 )
 
@@ -88,7 +90,7 @@ func (user User) TokenLifetime() time.Duration {
 }
 
 // SetAuthorizationCookie set a cookie with `Authorization` name
-func (user User) SetAuthorizationCookie(w http.ResponseWriter, value string) {
+func (user User) SetAuthorizationCookieAndHeader(w http.ResponseWriter, value string) {
 	cookie := &http.Cookie{}
 	cookie.Name = "Authorization"
 	cookie.Secure = true
@@ -97,6 +99,7 @@ func (user User) SetAuthorizationCookie(w http.ResponseWriter, value string) {
 	cookie.Expires = time.Now().Add(user.CookieLifetime())
 	cookie.Path = "/"
 	http.SetCookie(w, cookie)
+	w.Header().Add("Authorization", value)
 }
 
 // ExpireAuthorizationCookie exipre `Authorization` cookie if exists
@@ -110,17 +113,17 @@ func (user User) ExpireAuthorizationCookie(w http.ResponseWriter) {
 	http.SetCookie(w, cookie)
 }
 
-// Token is toke structure of JWT
-type Token struct {
-	ID    uint64 `json:"user_id"`
-	Token string `json:"Token"`
+func (user User) ExtractUserFromRequestContext(r *http.Request) User {
+	clm := r.Context().Value("Authorization").(*Claim)
+	jsonString, _ := crypto.CBCDecrypter(clm.Payload)
+	var u User
+	json.Unmarshal([]byte(jsonString), &u)
+
+	return u
 }
 
 // Claim is claim structure of JWT
 type Claim struct {
 	jwt.StandardClaims
-
-	ID       uint64 `json:"id"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
+	Payload string `json:"payload" doc:"Hex string encrypted with AES-256. Decrypted of this string contains id, username and email of user"`
 }

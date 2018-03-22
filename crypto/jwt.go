@@ -1,11 +1,11 @@
-package auth
+package crypto
 
 import (
 	"crypto/rsa"
 
 	jwt "github.com/dgrijalva/jwt-go"
 
-	"devin/auth/keys"
+	"devin/crypto/keys"
 )
 
 // GetJWTSignKey return private key for RSA sign.

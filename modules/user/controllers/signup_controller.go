@@ -109,6 +109,8 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//omit password to be included in response
+	user.PlainPassword = ""
 	json.NewEncoder(w).Encode(&user)
 }
 
@@ -130,7 +132,7 @@ func validateSignupInputs(user models.User) (e error, errMessages map[string][]s
 		errMessages["username"] = []string{"Invalid username"}
 	}
 
-	if len(user.Password) < 6 {
+	if len(user.PlainPassword) < 6 {
 		hasError = true
 		errMessages["password"] = []string{"Password length must be greater than 6 characters"}
 	}

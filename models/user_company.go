@@ -11,7 +11,7 @@ type UserCompany struct {
 	User                *User
 	CompanyID           uint64 `doc:"ID of users record with type=2"`
 	Company             *User
-	IsAdmin             bool `doc:"If is_admin=true => user will has full access"`
+	IsAdminOfCompany    bool `doc:"If is_admin=true => user will has full access"`
 	CanCreateProject    bool
 	CanAddUserToCompany bool
 	CreatedByID         uint64 `doc:"Who add this user to this company? OR How create this company for this user?"`

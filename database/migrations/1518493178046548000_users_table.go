@@ -18,6 +18,7 @@ func (Migration) MigrateUsersTable() (e error) {
     password varchar(512),
     email_verified bool,
     email_verification_token varchar(200),
+    is_root_user bool default false,
 
     job_title varchar(150),
     localization_language_id integer,

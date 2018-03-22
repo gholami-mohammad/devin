@@ -10,7 +10,7 @@ func (Migration) MigrateUserCompanyTable() (e error) {
     id bigserial NOT NULL,
     user_id bigint NOT NULL,
     company_id bigint NOT NULL,
-    is_admin bool DEFAULT false,
+    is_admin_of_company bool DEFAULT false,
     can_create_project bool DEFAULT false,
     can_add_user_to_company bool DEFAULT false,
     created_by_id bigint NOT NULL,

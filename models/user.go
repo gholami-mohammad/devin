@@ -17,6 +17,7 @@ type User struct {
 	Username               string
 	Email                  string
 	Password               string `json:"-"`
+	PlainPassword          string `json:"password" sql:"-"`
 	UserType               uint   `json:"-" doc:"1: authenticatable user, 2: company"`
 	FirstName              string
 	LastName               string

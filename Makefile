@@ -24,3 +24,11 @@ jwt_rsa_keys:
 test_user:
 	go test -v --coverprofile=cover.out devin/modules/user/controllers -run TestSignin
 	go tool cover --html=cover.out
+
+test_middlewares:
+	go test -v --coverprofile=cover.out devin/middlewares
+	go tool cover --html=cover.out
+
+test_crypto:
+	go test -v --coverprofile=cover.out devin/crypto
+	go tool cover --html=cover.out

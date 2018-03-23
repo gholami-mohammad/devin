@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -11,6 +12,10 @@ import (
 	"devin/crypto"
 	"devin/helpers"
 )
+
+func Init() {
+	log.SetFlags(log.Lshortfile)
+}
 
 // User : model of all system users
 type User struct {
@@ -114,16 +119,99 @@ func (user User) ExpireAuthorizationCookie(w http.ResponseWriter) {
 	http.SetCookie(w, cookie)
 }
 
-func (user User) ExtractUserFromRequestContext(r *http.Request) (User, error) {
+func (user User) ExtractUserFromRequestContext(r *http.Request) (User, *Claim, error) {
 	clm := r.Context().Value("Authorization").(*Claim)
 	jsonString, e := crypto.CBCDecrypter(clm.Payload)
 	if e != nil {
-		return User{}, e
+		return User{}, nil, e
 	}
 	var u User
 	json.Unmarshal([]byte(jsonString), &u)
 
-	return u, nil
+	return u, clm, nil
+}
+
+func (user User) ExtractUserFromClaimPayload(payload string) (User, error) {
+
+	jsonString, e := crypto.CBCDecrypter(payload)
+	if e != nil {
+		return User{}, e
+	}
+	var u User
+	e = json.Unmarshal([]byte(jsonString), &u)
+	return u, e
+}
+
+func (user User) GenerateNewTokenClaim() Claim {
+	var claimPayload struct {
+		ID       uint64 `json:"id"`
+		Username string `json:"username"`
+		Email    string `json:"email"`
+	}
+	claimPayload.ID = user.ID
+	claimPayload.Username = user.Username
+	claimPayload.Email = user.Email
+
+	bts, _ := json.Marshal(&claimPayload)
+	payload, _ := crypto.CBCEncrypter(string(bts))
+
+	claim := Claim{
+		Payload: payload,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(user.TokenLifetime()).Unix(),
+			Issuer:    "devin",
+		},
+	}
+
+	return claim
+}
+
+func (user User) GenerateNewTokenClaimWithCustomLifetime(duration time.Duration) Claim {
+	var claimPayload struct {
+		ID       uint64 `json:"id"`
+		Username string `json:"username"`
+		Email    string `json:"email"`
+	}
+	claimPayload.ID = user.ID
+	claimPayload.Username = user.Username
+	claimPayload.Email = user.Email
+	bts, _ := json.Marshal(&claimPayload)
+
+	payload, _ := crypto.CBCEncrypter(string(bts))
+	claim := Claim{
+		Payload: payload,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(duration).Unix(),
+			Issuer:    "devin",
+		},
+	}
+
+	return claim
+}
+
+func (user User) GenerateNewTokenString(claim Claim) (string, *helpers.ErrorResponse) {
+	t := jwt.NewWithClaims(jwt.SigningMethodRS512, claim)
+
+	sk, e := crypto.GetJWTSignKey()
+	if e != nil {
+		err := helpers.ErrorResponse{
+			Message:   "Internal server error(load jwt)",
+			ErrorCode: http.StatusInternalServerError,
+		}
+
+		return "", &err
+	}
+	tokenString, err := t.SignedString(sk)
+	if err != nil {
+		err := helpers.ErrorResponse{
+			Message:   "Internal server error(sign jwt)",
+			ErrorCode: http.StatusInternalServerError,
+		}
+
+		return "", &err
+	}
+
+	return tokenString, nil
 }
 
 // Claim is claim structure of JWT

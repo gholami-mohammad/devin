@@ -5,12 +5,9 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 
-	"devin/crypto"
 	"devin/database"
 	"devin/helpers"
 	"devin/models"
@@ -96,48 +93,14 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var claimPayload struct {
-		ID       uint64 `json:"id"`
-		Username string `json:"username"`
-		Email    string `json:"email"`
-	}
-	claimPayload.ID = user.ID
-	claimPayload.Username = user.Username
-	claimPayload.Email = user.Email
-	bts, _ := json.Marshal(&claimPayload)
+	claim := user.GenerateNewTokenClaim()
 
-	payload, _ := crypto.CBCEncrypter(string(bts))
-	claims := models.Claim{
-		Payload: payload,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(user.TokenLifetime()).Unix(),
-			Issuer:    "devin",
-		},
-	}
-
-	// create a signer for rsa 512
-	t := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
-
-	sk, e := crypto.GetJWTSignKey()
-	if e != nil {
-		err := helpers.ErrorResponse{
-			Message:   "Internal server error(load jwt)",
-			ErrorCode: http.StatusInternalServerError,
-		}
-		helpers.NewErrorResponse(w, &err)
-		return
-	}
-	tokenString, err := t.SignedString(sk)
+	tokenString, err := user.GenerateNewTokenString(claim)
 	if err != nil {
-		err := helpers.ErrorResponse{
-			Message:   "Internal server error(sign jwt)",
-			ErrorCode: http.StatusInternalServerError,
-		}
-		helpers.NewErrorResponse(w, &err)
+		helpers.NewErrorResponse(w, err)
 		return
 	}
 	user.SetAuthorizationCookieAndHeader(w, tokenString)
-	db.Update(&user)
 
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&user)

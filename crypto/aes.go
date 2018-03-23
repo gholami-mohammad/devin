@@ -9,15 +9,20 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	"devin/crypto/keys"
 )
 
+func Init() {
+	log.SetFlags(log.Lshortfile)
+}
+
 func CBCEncrypter(str string) (string, error) {
 	key, _ := hex.DecodeString(keys.AES_KEY)
 	plainBytes := []byte(str)
-	b64 := base64.StdEncoding.EncodeToString(plainBytes)
+	b64 := base64.RawStdEncoding.WithPadding('=').EncodeToString(plainBytes)
 	b64Bytes := []byte(b64)
 	if len(b64Bytes)%aes.BlockSize != 0 {
 		rpt := aes.BlockSize - (len(b64Bytes) % aes.BlockSize)
@@ -40,7 +45,6 @@ func CBCEncrypter(str string) (string, error) {
 
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
-
 	return fmt.Sprintf("%x", ciphertext), nil
 }
 
@@ -68,9 +72,9 @@ func CBCDecrypter(encodedString string) (string, error) {
 	mode := cipher.NewCBCDecrypter(block, iv)
 
 	mode.CryptBlocks(ciphertext, ciphertext)
-
 	b64 := strings.Replace(string(ciphertext), "=", "", -1)
-	bts, e := base64.StdEncoding.DecodeString(b64)
+
+	bts, e := base64.RawStdEncoding.DecodeString(b64)
 	if e != nil {
 		return "", e
 	}

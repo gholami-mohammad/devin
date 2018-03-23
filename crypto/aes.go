@@ -17,17 +17,16 @@ import (
 func CBCEncrypter(str string) (string, error) {
 	key, _ := hex.DecodeString(keys.AES_KEY)
 	plainBytes := []byte(str)
-	b64 := base64.StdEncoding.WithPadding('=').EncodeToString(plainBytes)
+	b64 := base64.StdEncoding.EncodeToString(plainBytes)
 	b64Bytes := []byte(b64)
 	if len(b64Bytes)%aes.BlockSize != 0 {
-		rpt := len(b64Bytes) - aes.BlockSize
+		rpt := aes.BlockSize - (len(b64Bytes) % aes.BlockSize)
 		if rpt < 0 {
 			rpt *= -1
 		}
 		b64 += strings.Repeat("=", rpt)
 	}
 	plaintext := []byte(b64)
-
 	block, e := aes.NewCipher(key)
 	if e != nil {
 		return "", e

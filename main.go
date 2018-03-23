@@ -5,15 +5,16 @@ import (
 	"net/http"
 	"time"
 
-	user_router "devin/modules/user/routes"
 	"github.com/gorilla/mux"
+
+	"devin/routes"
 )
 
 func main() {
 	r := mux.NewRouter()
 
 	u := r.PathPrefix("/api").Subrouter().StrictSlash(true)
-	user_router.LoadRoutes(u)
+	routes.LoadRoutes(u)
 
 	srv := &http.Server{
 		Handler:      r,

@@ -105,4 +105,6 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&user)
 }

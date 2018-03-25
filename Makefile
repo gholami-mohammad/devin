@@ -22,7 +22,7 @@ jwt_rsa_keys:
 	echo "\`\n" >> auth/keys/jwt_rsa.go
 
 test_user:
-	go test -v --coverprofile=cover.out devin/modules/user/controllers -run TestSignin
+	go test -v --coverprofile=cover.out devin/modules/user/controllers
 	go tool cover --html=cover.out
 
 test_middlewares:

@@ -40,7 +40,7 @@ func TestSignin(t *testing.T) {
 	})
 
 	t.Run("Empty Email", func(t *testing.T) {
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email":null, "password": "123"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email":null, "Password": "123"}`))
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -52,7 +52,7 @@ func TestSignin(t *testing.T) {
 	})
 
 	t.Run("Empty Password", func(t *testing.T) {
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "mgh", "password": ""}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "mgh", "Password": ""}`))
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -64,7 +64,7 @@ func TestSignin(t *testing.T) {
 	})
 
 	t.Run("No account found", func(t *testing.T) {
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "noone", "password": "pswd"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "noone", "Password": "pswd"}`))
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -82,7 +82,7 @@ func TestSignin(t *testing.T) {
 		db.Exec("insert into public.users (username,email,password,email_verified) values (?,?,?,?)", "success", "success@gmail.com", string(bts), false)
 		defer db.Exec("delete from public.users where username='success'")
 
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "success@gmail.com", "password": "pswd"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "success@gmail.com", "Password": "pswd"}`))
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -100,7 +100,7 @@ func TestSignin(t *testing.T) {
 		db.Exec("insert into public.users (username,email,password, email_verified) values (?,?,?,?)", "success", "success@gmail.com", string(bts), true)
 		defer db.Exec("delete from public.users where username='success'")
 
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "success@gmail.com", "password": "bad_pass"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "success@gmail.com", "Password": "bad_pass"}`))
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -120,7 +120,7 @@ func TestSignin(t *testing.T) {
 		db.Exec("insert into public.users (username,email,password, email_verified) values (?,?,?,?)", "success_email", "success_email@gmail.com", string(bts), true)
 		defer db.Exec("delete from public.users where username='success_email'")
 
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "success_email@gmail.com", "password": "pswd"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "success_email@gmail.com", "Password": "pswd"}`))
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -140,7 +140,7 @@ func TestSignin(t *testing.T) {
 		db.Exec("insert into public.users (username,email,password, email_verified) values (?,?,?,?)", "success_username", "success_username@gmail.com", string(bts), true)
 		defer db.Exec("delete from public.users where username='success_username'")
 
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "success_username@gmail.com", "password": "pswd"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "success_username@gmail.com", "Password": "pswd"}`))
 		if e != nil {
 			t.Fatal(e)
 		}

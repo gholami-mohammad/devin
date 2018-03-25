@@ -40,7 +40,7 @@ func TestSignup(t *testing.T) {
 	})
 
 	t.Run("Invalid email address", func(t *testing.T) {
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "badEMail", "username": "mgh"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "badEMail", "Username": "mgh"}`))
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -52,14 +52,14 @@ func TestSignup(t *testing.T) {
 
 		var err helpers.ErrorResponse
 		json.NewDecoder(res.Body).Decode(&err)
-		t.Log(err.Errors["email"])
-		if len(err.Errors["email"]) == 0 {
+		t.Log(err.Errors["Email"])
+		if len(err.Errors["Email"]) == 0 {
 			t.Fatal("No email error found")
 		}
 	})
 
 	t.Run("Invalid username", func(t *testing.T) {
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "m6devin@gmail.com", "username": "MMMHJSD8234#$%^"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "m6devin@gmail.com", "Username": "MMMHJSD8234#$%^"}`))
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -70,14 +70,14 @@ func TestSignup(t *testing.T) {
 		}
 		var err helpers.ErrorResponse
 		json.NewDecoder(res.Body).Decode(&err)
-		t.Log(err.Errors["username"])
-		if len(err.Errors["username"]) == 0 {
+		t.Log(err.Errors["Username"])
+		if len(err.Errors["Username"]) == 0 {
 			t.Fatal("No username error found")
 		}
 	})
 
 	t.Run("Invalid password length", func(t *testing.T) {
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "m6devin@gmail.com", "username": "mgh", "password": "123"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "m6devin@gmail.com", "Username": "mgh", "Password": "123"}`))
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -88,8 +88,8 @@ func TestSignup(t *testing.T) {
 		}
 		var err helpers.ErrorResponse
 		json.NewDecoder(res.Body).Decode(&err)
-		t.Log(err.Errors["password"])
-		if len(err.Errors["password"]) == 0 {
+		t.Log(err.Errors["Password"])
+		if len(err.Errors["Password"]) == 0 {
 			t.Fatal("No password error found")
 		}
 	})
@@ -100,7 +100,7 @@ func TestSignup(t *testing.T) {
 		db.Exec("insert into public.users (username,email) values (?,?)", "duplicate", "duplicate@gmail.com")
 		defer db.Exec("delete from public.users where username='duplicate'")
 
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "duplicate@gmail.com", "username": "noduplicate", "password": "123123"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "duplicate@gmail.com", "Username": "noduplicate", "Password": "123123"}`))
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -112,8 +112,8 @@ func TestSignup(t *testing.T) {
 		var err helpers.ErrorResponse
 		json.NewDecoder(res.Body).Decode(&err)
 		t.Log(err)
-		t.Log(err.Errors["email"])
-		if len(err.Errors["email"]) == 0 {
+		t.Log(err.Errors["Email"])
+		if len(err.Errors["Email"]) == 0 {
 			t.Fatal("No email error found")
 		}
 	})
@@ -123,7 +123,7 @@ func TestSignup(t *testing.T) {
 		defer db.Close()
 		db.Exec("insert into public.users (username,email) values (?,?)", "duplicate", "duplicate@gmail.com")
 		defer db.Exec("delete from public.users where username='duplicate'")
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "noduplicate@gmail.com", "username": "duplicate", "password": "123123"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "noduplicate@gmail.com", "Username": "duplicate", "Password": "123123"}`))
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -134,8 +134,8 @@ func TestSignup(t *testing.T) {
 		}
 		var err helpers.ErrorResponse
 		json.NewDecoder(res.Body).Decode(&err)
-		t.Log(err.Errors["username"])
-		if len(err.Errors["username"]) == 0 {
+		t.Log(err.Errors["Username"])
+		if len(err.Errors["Username"]) == 0 {
 			t.Fatal("No username error found")
 		}
 	})
@@ -144,7 +144,7 @@ func TestSignup(t *testing.T) {
 		db := database.NewPGInstance()
 		defer db.Close()
 		defer db.Exec("delete from public.users where username='success'")
-		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"email": "success@gmail.com", "username": "success", "password": "123123"}`))
+		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "success@gmail.com", "Username": "success", "Password": "123123"}`))
 		if e != nil {
 			t.Fatal(e)
 		}

@@ -111,6 +111,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 	//omit password to be included in response
 	user.PlainPassword = ""
+	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&user)
 }
 

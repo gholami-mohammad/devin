@@ -10,6 +10,10 @@ import (
 	"devin/routes"
 )
 
+func Init() {
+	log.SetFlags(log.Lshortfile)
+}
+
 func main() {
 	r := mux.NewRouter()
 

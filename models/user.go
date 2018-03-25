@@ -2,11 +2,13 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	jwt_request "github.com/dgrijalva/jwt-go/request"
 	"golang.org/x/crypto/bcrypt"
 
 	"devin/crypto"
@@ -23,22 +25,26 @@ type User struct {
 	ID                     uint64
 	Username               string
 	Email                  string
-	Password               string `json:"-"`
-	PlainPassword          string `json:"password" sql:"-"`
-	UserType               uint   `json:"-" doc:"1: authenticatable user, 2: company"`
-	FirstName              string
-	LastName               string
+	Password               string         `json:"-"`
+	PlainPassword          string         `json:"Password" sql:"-"`
+	UserType               uint           `json:"-" doc:"1: authenticatable user, 2: company"`
 	UserCompanyMapping     []*UserCompany `doc:"نگاشت کاربران عضو در هر کمپانی"`
-	Avatar                 string
-	OwnerID                uint64 `doc:"کد یکتای مالک و سازنده ی یک کمپانی. این فیلد برای حساب کاربری افراد میتواند خالی باشد."`
+	OwnerID                uint64         `doc:"کد یکتای مالک و سازنده ی یک کمپانی. این فیلد برای حساب کاربری افراد میتواند خالی باشد."`
 	Owner                  *User
 	EmailVerified          bool
 	EmailVerificationToken string `json:"-"`
-	IsRootUser             bool
+	IsRootUser             bool   `json:"-"`
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+	DeletedAt              *time.Time `json:"-"`
 
-	/**
-	 * Profile properties
-	 */
+	PublicProfile
+}
+
+type PublicProfile struct {
+	FirstName                string
+	LastName                 string
+	Avatar                   string
 	JobTitle                 string          `doc:"User's job title in a company"`
 	LocalizationLanguageID   uint            `doc:"FK to countries table to get localization settings"`
 	LocalizationLanguage     *Country        `doc:"Belongs to Country model to load i18n settings"`
@@ -66,10 +72,6 @@ type User struct {
 	Facebook                 string          `doc:"Facebook username or full profile URL"`
 	Telegram                 string          `doc:"Telegram username or full telegram profile URL"`
 	Website                  string          `doc:"Personnal website URL"`
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `json:"-"`
 }
 
 // SetEncryptedPassword set new bcrypt password
@@ -99,7 +101,7 @@ func (user User) TokenLifetime() time.Duration {
 func (user User) SetAuthorizationCookieAndHeader(w http.ResponseWriter, value string) {
 	cookie := &http.Cookie{}
 	cookie.Name = "Authorization"
-	cookie.Secure = true
+	// cookie.Secure = true
 	cookie.Value = value
 	cookie.HttpOnly = true
 	cookie.Expires = time.Now().Add(user.CookieLifetime())
@@ -112,7 +114,7 @@ func (user User) SetAuthorizationCookieAndHeader(w http.ResponseWriter, value st
 func (user User) ExpireAuthorizationCookie(w http.ResponseWriter) {
 	cookie := &http.Cookie{}
 	cookie.Name = "Authorization"
-	cookie.Secure = true
+	// cookie.Secure = true
 	cookie.Value = ""
 	cookie.HttpOnly = true
 	cookie.Expires = time.Now().Add(-10 * time.Hour)
@@ -120,7 +122,29 @@ func (user User) ExpireAuthorizationCookie(w http.ResponseWriter) {
 }
 
 func (user User) ExtractUserFromRequestContext(r *http.Request) (User, *Claim, error) {
-	clm := r.Context().Value("Authorization").(*Claim)
+	var clm *Claim
+	if r.Context().Value("Authorization") == nil {
+		_, ok := r.Header["Authorization"]
+		if !ok {
+			cookie, e := r.Cookie("Authorization")
+			if e != nil {
+				return User{}, nil, errors.New("No Authorization context(header or cookie) found")
+			}
+			r.Header.Set("Authorization", cookie.Value)
+		}
+
+		token, err := jwt_request.ParseFromRequestWithClaims(r, jwt_request.HeaderExtractor{"Authorization"}, &Claim{}, func(token *jwt.Token) (interface{}, error) {
+			return crypto.GetJWTVerifyKey()
+		})
+		if err != nil || !token.Valid {
+			return User{}, nil, errors.New("Invalid authentication token")
+		}
+
+		clm = token.Claims.(*Claim)
+
+	} else {
+		clm = r.Context().Value("Authorization").(*Claim)
+	}
 	jsonString, e := crypto.CBCDecrypter(clm.Payload)
 	if e != nil {
 		return User{}, nil, e

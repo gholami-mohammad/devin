@@ -18,7 +18,7 @@ Golang
 
 **Build the Docker image**
 ```
-docker build -t gogit:light -f Dockerfile.light .
+docker build -t devin:light -f Dockerfile.light .
 ```
 
 <p dir="rtl">
@@ -46,7 +46,7 @@ make docker-go
 **Build the Docker image**
 
 ```
-docker build -t gogit:go -f Dockerfile .
+docker build -t devin:go -f Dockerfile .
 ```
 <p dir="rtl">
 پس از ساخت image

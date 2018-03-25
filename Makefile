@@ -1,14 +1,14 @@
 run:
 	./build.sh
 docker:
-	docker run -it --rm -p 8080:8080  -v "$(PWD)":/go/src/gogit -w /go/src/gogit golang:1.9.3-alpine3.7 /go/src/gogit/build.sh
+	docker run -it --rm -p 13000:13000  -v "$(PWD)":/go/src/devin -w /go/src/devin golang:1.9.3-alpine3.7 /go/src/devin/build.sh
 
 docker-go:
-	docker run -it --rm -p 8080:8080 gogit:go
+	docker run -it --rm -p 13000:13000 devin:go
 
 docker-light:
-	env GOOS=linux GOARCH=amd64 go build -v gogit
-	docker run -it -p 8080:8080 --rm gogit:light
+	env GOOS=linux GOARCH=amd64 go build -v devin
+	docker run -it -p 13000:13000 --rm devin:light
 
 jwt_rsa_keys:
 	openssl genrsa -out auth/keys/jwt.rsa 4096

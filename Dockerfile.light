@@ -1,5 +1,5 @@
 FROM alpine:3.7
-ENV PATH="/usr/gogit:${PATH}"
-RUN mkdir /usr/gogit
-COPY gogit /usr/gogit
-CMD gogit
+ENV PATH="/usr/devin:${PATH}"
+RUN mkdir /usr/devin
+COPY devin /usr/devin
+CMD devin

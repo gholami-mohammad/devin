@@ -8,8 +8,8 @@ import (
 // NewPGInstance opens new connection to Postgres database
 func NewPGInstance() *pg.DB {
 	return pg.Connect(&pg.Options{
-		User:     "mgh",
-		Password: "mgh_ua6872",
+		User:     "DBUser",
+		Password: "DBPassword",
 		Database: "gogit",
 		Network:  "tcp",
 		Addr:     "127.0.0.1:5432",

@@ -25,6 +25,10 @@ test_user:
 	go test -v --coverprofile=cover.out devin/modules/user/controllers
 	go tool cover --html=cover.out
 
+test_user_profile_update:
+	go test -v --coverprofile=cover.out devin/modules/user/controllers -run=TestUpdateProfile
+	go tool cover --html=cover.out
+
 test_middlewares:
 	go test -v --coverprofile=cover.out devin/middlewares
 	go tool cover --html=cover.out

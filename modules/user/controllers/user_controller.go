@@ -41,11 +41,20 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		helpers.NewErrorResponse(w, &err)
 		return
 	}
-	user.ID, _ = strconv.ParseUint(userID, 10, 64)
+	var e error
+	user.ID, e = strconv.ParseUint(userID, 10, 64)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			Message:   "Invalid User ID. Just integer values accepted",
+			ErrorCode: http.StatusUnprocessableEntity,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
 	//Load current user data from DB
 	db := database.NewPGInstance()
 	defer db.Close()
-	e := db.Model(&user).Where("id=?", user.ID).First()
+	e = db.Model(&user).Where("id=?", user.ID).First()
 	if e != nil {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusInternalServerError,
@@ -75,6 +84,17 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 			Message:   "This action is not allowed for you.",
 		}
 		log.Println("This action is not allowed for you.,")
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	if r.Body == nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusInternalServerError,
+			Message:   "Request body cant be empty",
+		}
+		log.Println("Request body cant be empty,", e)
 		helpers.NewErrorResponse(w, &err)
 
 		return

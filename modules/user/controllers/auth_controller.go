@@ -68,7 +68,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 
 	if user.ID == 0 {
 		err := helpers.ErrorResponse{
-			Message:   "Invalid email/username or password",
+			Message:   "Invalid email/username or password #1",
 			ErrorCode: http.StatusUnauthorized,
 		}
 		helpers.NewErrorResponse(w, &err)
@@ -86,7 +86,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userReq.Password)) != nil {
 		err := helpers.ErrorResponse{
-			Message:   "Invalid email/username or password",
+			Message:   "Invalid email/username or password #2",
 			ErrorCode: http.StatusUnauthorized,
 		}
 		helpers.NewErrorResponse(w, &err)
@@ -114,12 +114,12 @@ func validateSignipInputs(user SigninReq) (e error, errMessages map[string][]str
 
 	if strings.EqualFold(user.Email, "") {
 		hasError = true
-		errMessages["email"] = []string{"Emain or username is required"}
+		errMessages["Email"] = []string{"Email or username is required"}
 	}
 
 	if strings.EqualFold(user.Password, "") {
 		hasError = true
-		errMessages["password"] = []string{"Password is required"}
+		errMessages["Password"] = []string{"Password is required"}
 	}
 
 	if hasError {

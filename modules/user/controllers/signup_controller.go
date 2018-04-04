@@ -68,7 +68,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	is, _ := isUniqueValue(db, "email", user.Email, 0)
 	if is == false {
 		messages := make(map[string][]string)
-		messages["email"] = []string{"This email is already registered."}
+		messages["Email"] = []string{"This email is already registered."}
 		err := helpers.ErrorResponse{
 			Message:   "Invalid Email address.",
 			ErrorCode: http.StatusUnprocessableEntity,
@@ -82,7 +82,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	is, _ = isUniqueValue(db, "username", user.Username, 0)
 	if is == false {
 		messages := make(map[string][]string)
-		messages["username"] = []string{"This username is already registered."}
+		messages["Username"] = []string{"This username is already registered."}
 		err := helpers.ErrorResponse{
 			Message:   "Invalid username.",
 			ErrorCode: http.StatusUnprocessableEntity,
@@ -94,7 +94,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.UserType = 1
-	user.SetEncryptedPassword(user.Password)
+	user.SetEncryptedPassword(user.PlainPassword)
 	user.SetNewEmailVerificationToken()
 
 	// Saving data
@@ -124,18 +124,18 @@ func validateSignupInputs(user models.User) (e error, errMessages map[string][]s
 	isValidEmail := helpers.Validator{}.IsValidEmailFormat(user.Email)
 	if isValidEmail == false {
 		hasError = true
-		errMessages["email"] = []string{"Invalid Email address"}
+		errMessages["Email"] = []string{"Invalid Email address"}
 	}
 
 	isValidUsername := helpers.Validator{}.IsValidUsernameFormat(user.Username)
 	if isValidUsername == false {
 		hasError = true
-		errMessages["username"] = []string{"Invalid username"}
+		errMessages["Username"] = []string{"Invalid username"}
 	}
 
 	if len(user.PlainPassword) < 6 {
 		hasError = true
-		errMessages["password"] = []string{"Password length must be greater than 6 characters"}
+		errMessages["Password"] = []string{"Password length must be greater than 6 characters"}
 	}
 
 	if hasError {

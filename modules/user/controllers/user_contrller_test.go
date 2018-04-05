@@ -228,3 +228,50 @@ func TestUpdateProfile(t *testing.T) {
 	})
 
 }
+
+func TestWhoami(t *testing.T) {
+
+	t.Run("Bad request context", func(t *testing.T) {
+		rr := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/api/whoami", nil)
+		handler := http.HandlerFunc(Whoami)
+		handler.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		if res.StatusCode != http.StatusUnauthorized {
+			t.Fatal()
+		}
+	})
+
+	t.Run("User not found", func(t *testing.T) {
+		_, _, tokenString := getValidUser(14, true)
+		deleteTestUser(14)
+
+		rr := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/api/whoami", nil)
+		req.Header.Add("Authorization", tokenString)
+		handler := http.HandlerFunc(Whoami)
+		handler.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		if res.StatusCode != http.StatusUnauthorized {
+			t.Fatal()
+		}
+	})
+
+	t.Run("OK", func(t *testing.T) {
+		_, _, tokenString := getValidUser(13, true)
+		defer deleteTestUser(13)
+
+		rr := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/api/whoami", nil)
+		req.Header.Add("Authorization", tokenString)
+		handler := http.HandlerFunc(Whoami)
+		handler.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		if res.StatusCode != http.StatusOK {
+			t.Fatal()
+		}
+	})
+}

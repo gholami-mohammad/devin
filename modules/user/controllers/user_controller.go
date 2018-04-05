@@ -128,3 +128,38 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&user)
 }
+
+// Whoami load profile data of current logged in user
+func Whoami(w http.ResponseWriter, r *http.Request) {
+	authUser, _, e := models.User{}.ExtractUserFromRequestContext(r)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnauthorized,
+			Message:   "Auhtentication failed.",
+		}
+		log.Println("Auhtentication failed,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	db := database.NewPGInstance()
+	defer db.Close()
+	var user models.User
+
+	//Loading required data from DB
+	e = db.Model(&user).Where("id=?", authUser.ID).First()
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnauthorized,
+			Message:   "Auhtentication failed.",
+		}
+		log.Println("Auhtentication failed,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&user)
+}

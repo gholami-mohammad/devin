@@ -136,7 +136,7 @@ func Authenticate(next http.Handler) http.Handler {
 			}
 			user.SetAuthorizationCookieAndHeader(w, tokenString)
 
-			ctx := context.WithValue(r.Context(), "Authorization", claim)
+			ctx := context.WithValue(r.Context(), "Authorization", &claim)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 

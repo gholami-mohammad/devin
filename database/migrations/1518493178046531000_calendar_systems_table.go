@@ -8,6 +8,7 @@ func (Migration) MigrateCalendarSystemsTable() (e error) {
 	defer db.Close()
 	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.calendar_systems (
     id serial NOT NULL,
+    name varchar(100),
     component_name varchar(100),
     filter_name varchar(100),
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,

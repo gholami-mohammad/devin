@@ -11,5 +11,5 @@ type CalendarSystem struct {
 	FilterName    string `doc:"UI filter name to use in template rendering. e.g jdate"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
-	DeletedAt     *time.Time
+	DeletedAt     *time.Time `json:"-"`
 }

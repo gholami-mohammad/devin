@@ -15,5 +15,5 @@ type Country struct {
 	LocaleCode  string `doc:"Localization (i18n) code e.g fa_IR for irannian persian language"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	DeletedAt   *time.Time
+	DeletedAt   *time.Time `json:"-"`
 }

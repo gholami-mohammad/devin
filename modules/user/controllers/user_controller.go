@@ -163,3 +163,30 @@ func Whoami(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&user)
 }
+
+// ProfileBasicInfo return array of basic informations
+// required to render profile edit form
+func ProfileBasicInfo(w http.ResponseWriter, r *http.Request) {
+	info := make(map[string]interface{})
+	db := database.NewPGInstance()
+	defer db.Close()
+
+	var countries []models.Country
+	db.Model(&countries).Where("deleted_at IS NULL").Select(&countries)
+	var dateFormates []models.DateFormat
+	db.Model(&dateFormates).Where("deleted_at IS NULL").Select(&dateFormates)
+	var calendarSystems []models.CalendarSystem
+	db.Model(&calendarSystems).Where("deleted_at IS NULL").Select(&calendarSystems)
+
+	info["LocalizationLanguages"] = countries
+	info["DateFormats"] = dateFormates
+	info["CalendarSystems"] = calendarSystems
+	info["OfficePhoneCountryCodes"] = countries
+	info["HomePhoneCountryCodes"] = countries
+	info["CellPhoneCountryCodes"] = countries
+	info["FaxCountryCodes"] = countries
+	info["Countries"] = countries
+
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&info)
+}

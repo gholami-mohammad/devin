@@ -61,9 +61,18 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 
 	isEmail := helpers.Validator{}.IsValidEmailFormat(userReq.Email)
 	if isEmail {
-		db.Where("email=?", userReq.Email).First(&user)
+		e = db.Where("email=?", userReq.Email).First(&user).Error
 	} else {
-		db.Where("username=?", userReq.Email).First(&user)
+		e = db.Where("username=?", userReq.Email).First(&user).Error
+	}
+
+	if e != nil {
+		err := helpers.ErrorResponse{
+			Message:   e.Error(),
+			ErrorCode: http.StatusUnauthorized,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
 	}
 
 	if user.ID == 0 {

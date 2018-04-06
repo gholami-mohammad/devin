@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateTagsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.tags (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.tags (
     id bigserial NOT NULL,
     company_id bigint NOT NULL,
     title varchar(255),
@@ -24,16 +24,16 @@ func (Migration) MigrateTagsTable() (e error) {
         REFERENCES public.users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackTagsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.tags CASCADE;")
+	e = db.Exec("DROP TABLE IF EXISTS public.tags CASCADE;").Error
 
 	return
 }

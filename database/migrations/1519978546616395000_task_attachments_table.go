@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateTaskAttachmentsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_attachments (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_attachments (
     id bigserial NOT NULL,
     file_path varchar(255),
     task_id bigint NOT NULL,
@@ -22,16 +22,16 @@ func (Migration) MigrateTaskAttachmentsTable() (e error) {
         REFERENCES public.users (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackTaskAttachmentsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.task_attachments;")
+	e = db.Exec("DROP TABLE IF EXISTS public.task_attachments;").Error
 
 	return
 }

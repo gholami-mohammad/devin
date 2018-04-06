@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateTaskPrerequisitesTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_prerequisites (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_prerequisites (
     id bigserial NOT NULL,
     task_id bigint NOT NULL,
     prerequisite_id bigint NOT NULL,
@@ -18,16 +18,16 @@ func (Migration) MigrateTaskPrerequisitesTable() (e error) {
         REFERENCES public.users (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackTaskPrerequisitesTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.task_prerequisites;")
+	e = db.Exec("DROP TABLE IF EXISTS public.task_prerequisites;").Error
 
 	return
 }

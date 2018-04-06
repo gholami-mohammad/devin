@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateTaskBoardsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_boards(
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_boards(
     id bigserial NOT NULL,
     name varchar(255) NOT NULL,
     project_id bigint,
@@ -25,16 +25,16 @@ func (Migration) MigrateTaskBoardsTable() (e error) {
         REFERENCES public.users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackTaskBoardsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.task_boards CASCADE;")
+	e = db.Exec("DROP TABLE IF EXISTS public.task_boards CASCADE;").Error
 
 	return
 }

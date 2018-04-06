@@ -108,10 +108,10 @@ func Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Close()
 
-		db.Model(&user).Where("id=?", authUser.ID).First()
+		db.Where("id=?", authUser.ID).First(&user)
 		if user.ID == 0 {
 			models.User{}.ExpireAuthorizationCookie(w)
 

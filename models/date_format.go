@@ -5,7 +5,7 @@ import (
 )
 
 type DateFormat struct {
-	tableName struct{} `sql:"public.date_formates"`
+	tableName struct{} `sql:"public.date_formats"`
 	ID        uint
 	Name      string
 	CreatedAt time.Time

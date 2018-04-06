@@ -52,7 +52,7 @@ func TestAuthenticate(t *testing.T) {
 
 	t.Run("Expired_Token", func(t *testing.T) {
 		user := createValidUser()
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Exec("delete from public.users where username='success_token'")
 		defer db.Close()
 
@@ -80,7 +80,7 @@ func TestAuthenticate(t *testing.T) {
 
 	t.Run("Bad_Token", func(t *testing.T) {
 		user := createValidUser()
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Exec("delete from public.users where username='success_token'")
 		defer db.Close()
 
@@ -109,7 +109,7 @@ func TestAuthenticate(t *testing.T) {
 
 	t.Run("Bad_Payload", func(t *testing.T) {
 		user := createValidUser()
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Exec("delete from public.users where username='success_token'")
 		defer db.Close()
 
@@ -168,7 +168,7 @@ func TestAuthenticate(t *testing.T) {
 
 	t.Run("OK, less than 25% lifetime", func(t *testing.T) {
 		user := createValidUser()
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Exec("delete from public.users where username='success_token'")
 		defer db.Close()
 
@@ -197,7 +197,7 @@ func TestAuthenticate(t *testing.T) {
 
 	t.Run("OK", func(t *testing.T) {
 		user := createValidUser()
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Exec("delete from public.users where username='success_token'")
 		defer db.Close()
 
@@ -226,13 +226,13 @@ func TestAuthenticate(t *testing.T) {
 }
 
 func createValidUser() models.User {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
 	bts, _ := bcrypt.GenerateFromPassword([]byte("pswd"), bcrypt.DefaultCost)
 	db.Exec("insert into public.users (username,email,password, email_verified) values (?,?,?,?)", "success_token", "success_token@gmail.com", string(bts), true)
 
 	var user models.User
-	db.Model(&user).Where("username='success_token'").First()
+	db.Where("username='success_token'").First(&user)
 
 	return user
 }

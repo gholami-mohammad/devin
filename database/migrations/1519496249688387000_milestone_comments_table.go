@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateMilestoneCommentsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.milestone_comments (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.milestone_comments (
     id bigserial NOT NULL,
     milestone_id bigint NOT NULL,
     reply_to_id bigint,
@@ -30,16 +30,16 @@ func (Migration) MigrateMilestoneCommentsTable() (e error) {
         REFERENCES public.users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    );`)
+    );`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackMilestoneCommentsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.milestone_comments;")
+	e = db.Exec("DROP TABLE IF EXISTS public.milestone_comments;").Error
 
 	return
 }

@@ -76,7 +76,7 @@ func TestSignin(t *testing.T) {
 	})
 
 	t.Run("Email not verified", func(t *testing.T) {
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Close()
 		bts, _ := bcrypt.GenerateFromPassword([]byte("pswd"), bcrypt.DefaultCost)
 		db.Exec("insert into public.users (username,email,password,email_verified) values (?,?,?,?)", "success", "success@gmail.com", string(bts), false)
@@ -94,7 +94,7 @@ func TestSignin(t *testing.T) {
 	})
 
 	t.Run("wrong password", func(t *testing.T) {
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Close()
 		bts, _ := bcrypt.GenerateFromPassword([]byte("pswd"), bcrypt.DefaultCost)
 		db.Exec("insert into public.users (username,email,password, email_verified) values (?,?,?,?)", "success", "success@gmail.com", string(bts), true)
@@ -114,7 +114,7 @@ func TestSignin(t *testing.T) {
 	})
 
 	t.Run("Success login with email", func(t *testing.T) {
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Close()
 		bts, _ := bcrypt.GenerateFromPassword([]byte("pswd"), bcrypt.DefaultCost)
 		db.Exec("insert into public.users (username,email,password, email_verified) values (?,?,?,?)", "success_email", "success_email@gmail.com", string(bts), true)
@@ -134,7 +134,7 @@ func TestSignin(t *testing.T) {
 	})
 
 	t.Run("Success login with username", func(t *testing.T) {
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Close()
 		bts, _ := bcrypt.GenerateFromPassword([]byte("pswd"), bcrypt.DefaultCost)
 		db.Exec("insert into public.users (username,email,password, email_verified) values (?,?,?,?)", "success_username", "success_username@gmail.com", string(bts), true)

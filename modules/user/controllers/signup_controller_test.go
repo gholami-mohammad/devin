@@ -95,7 +95,7 @@ func TestSignup(t *testing.T) {
 	})
 
 	t.Run("Duplicate email", func(t *testing.T) {
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Close()
 		db.Exec("insert into public.users (username,email) values (?,?)", "duplicate", "duplicate@gmail.com")
 		defer db.Exec("delete from public.users where username='duplicate'")
@@ -119,7 +119,7 @@ func TestSignup(t *testing.T) {
 	})
 
 	t.Run("Duplicate username", func(t *testing.T) {
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Close()
 		db.Exec("insert into public.users (username,email) values (?,?)", "duplicate", "duplicate@gmail.com")
 		defer db.Exec("delete from public.users where username='duplicate'")
@@ -141,7 +141,7 @@ func TestSignup(t *testing.T) {
 	})
 
 	t.Run("OK data", func(t *testing.T) {
-		db := database.NewPGInstance()
+		db := database.NewGORMInstance()
 		defer db.Close()
 		defer db.Exec("delete from public.users where username='success'")
 		res, e := http.Post(server.URL, "application/json", strings.NewReader(`{"Email": "success@gmail.com", "Username": "success", "Password": "123123"}`))

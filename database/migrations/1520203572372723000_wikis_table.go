@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateWikisTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.wikis (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.wikis (
     id bigserial NOT NULL,
     name varchar(255) NOT NULL,
     project_id bigint,
@@ -29,16 +29,16 @@ func (Migration) MigrateWikisTable() (e error) {
         REFERENCES public.users (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackWikisTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.wikis CASCADE;")
+	e = db.Exec("DROP TABLE IF EXISTS public.wikis CASCADE;").Error
 
 	return
 }

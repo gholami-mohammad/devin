@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateTaskSpentTimesTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_spent_times (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_spent_times (
     id bigserial NOT NULL,
     spent_by_id bigint NOT NULL,
     task_id bigint,
@@ -33,16 +33,16 @@ func (Migration) MigrateTaskSpentTimesTable() (e error) {
         REFERENCES public.users (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackTaskSpentTimesTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.task_spent_times;")
+	e = db.Exec("DROP TABLE IF EXISTS public.task_spent_times;").Error
 
 	return
 }

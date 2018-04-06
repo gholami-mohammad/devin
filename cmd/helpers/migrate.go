@@ -35,18 +35,18 @@ import "gogit/database"
 
 // Migrate the database to a new version
 func (Migration) Migrate%v() (e error) {
-    db := database.NewPGInstance()
+    db := database.NewGORMInstance()
     defer db.Close()
-    _, e = db.Exec("")
+    e = db.Exec("").Error
 
     return
 }
 
 // Rollback the database to previous version
 func (Migration) Rollback%v() (e error) {
-    db := database.NewPGInstance()
+    db := database.NewGORMInstance()
     defer db.Close()
-    _, e = db.Exec("")
+    e = db.Exec("").Error
 
     return
 }`, strcase.ToCamel(*create), strcase.ToCamel(*create))
@@ -61,7 +61,7 @@ func (Migration) Rollback%v() (e error) {
 
 // checkMigrationTable will check existance of migrations table and create it if it dosen't exist.
 func checkMigrationTable() {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
 
 	db.Exec(`CREATE SCHEMA IF NOT EXISTS public;`)
@@ -77,7 +77,7 @@ func checkMigrationTable() {
 func Migrate() {
 	checkMigrationTable()
 
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
 
 	files, e := ioutil.ReadDir("./database/migrations/")
@@ -97,7 +97,7 @@ func Migrate() {
 		if strings.EqualFold(name, "Migration") {
 			continue
 		}
-		db.Model(&mg).Where("name LIKE ?", filename).First()
+		db.Where("name LIKE ?", filename).First(&mg)
 
 		if mg.ID != 0 {
 			//This file already migrated
@@ -132,7 +132,7 @@ func Migrate() {
 
 		// save migrated file to DB
 		mg.Name = filename
-		db.Insert(&mg)
+		db.Create(&mg)
 
 		Printer{}.Success(name, " Migrated")
 	}
@@ -145,11 +145,11 @@ func Migrate() {
 func Rollback() {
 	checkMigrationTable()
 
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
 
 	var rollbacks []migration
-	db.Model(&rollbacks).Where("batch = (select max(batch) from migrations)").Select()
+	db.Where("batch = (select max(batch) from migrations)").Find(&rollbacks)
 	for _, v := range rollbacks {
 		name := strcase.ToCamel(v.Name)
 		Printer{}.Warning("Rollback ", name)

@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateTaskAssignmentsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_assignments (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_assignments (
     id bigserial NOT NULL,
     user_id bigint NOT NULL,
     task_id bigint NOT NULL,
@@ -26,16 +26,16 @@ func (Migration) MigrateTaskAssignmentsTable() (e error) {
         REFERENCES public.users (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackTaskAssignmentsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.task_assignments;")
+	e = db.Exec("DROP TABLE IF EXISTS public.task_assignments;").Error
 
 	return
 }

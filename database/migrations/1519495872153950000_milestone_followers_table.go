@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateMilestoneFollowersTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.milestone_followers(
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.milestone_followers(
     id bigserial NOT NULL,
     milestone_id bigint NOT NULL,
     user_id bigint NOT NULL,
@@ -26,16 +26,16 @@ func (Migration) MigrateMilestoneFollowersTable() (e error) {
         REFERENCES public.users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackMilestoneFollowersTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.milestone_followers;")
+	e = db.Exec("DROP TABLE IF EXISTS public.milestone_followers;").Error
 
 	return
 }

@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateAddressCitiesTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.address_cities(
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.address_cities(
     id serial NOT NULL,
     name varchar(200) NOT NULL,
     province_id integer NOT NULL,
@@ -24,16 +24,16 @@ func (Migration) MigrateAddressCitiesTable() (e error) {
         REFERENCES public.address_countries (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    );`)
+    );`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackAddressCitiesTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.address_cities;")
+	e = db.Exec("DROP TABLE IF EXISTS public.address_cities CASCADE;").Error
 
 	return
 }

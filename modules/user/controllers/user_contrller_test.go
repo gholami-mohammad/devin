@@ -18,10 +18,14 @@ import (
 )
 
 func getValidUser(id int, isRoot bool) (user models.User, claim models.Claim, tokenString string) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	db.Exec(`delete from users where id=?; insert into users (id, username, email, is_root_user) values (?, ?, ?, ?)`, id, id, fmt.Sprintf("mgh%v", id), fmt.Sprintf("m6devin%v@gmail.com", id), isRoot)
-	db.Model(&user).Where("id=?", id).First()
+	db.Exec(`delete from users where id=?;`, id)
+	e := db.Exec(`insert into users (id, username, email, is_root_user) values (?, ?, ?, ?)`, id, fmt.Sprintf("mgh%v", id), fmt.Sprintf("m6devin%v@gmail.com", id), isRoot).Error
+	if e != nil {
+		panic(e.Error())
+	}
+	db.Where("id=?", id).First(&user)
 	claim = user.GenerateNewTokenClaim()
 	tokenString, _ = user.GenerateNewTokenString(claim)
 
@@ -29,7 +33,7 @@ func getValidUser(id int, isRoot bool) (user models.User, claim models.Claim, to
 }
 
 func deleteTestUser(id int) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
 	db.Exec(`delete from users where id=?;`, id)
 }
@@ -206,7 +210,8 @@ func TestUpdateProfile(t *testing.T) {
 	})
 
 	t.Run("OK", func(t *testing.T) {
-		user1.FirstName = "Updated first name"
+		sp := "Updated first name"
+		user1.FirstName = &sp
 		bts, _ := json.Marshal(&user1)
 		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), bytes.NewReader(bts))
 

@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateMilestoneResponsibleUsers() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.milestone_responsible_users (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.milestone_responsible_users (
     id bigserial NOT NULL,
     milestone_id bigint NOT NULL,
     user_id bigint NOT NULL,
@@ -26,16 +26,16 @@ func (Migration) MigrateMilestoneResponsibleUsers() (e error) {
         REFERENCES public.users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackMilestoneResponsibleUsers() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`DROP TABLE IF EXISTS public.milestone_responsible_users;`)
+	e = db.Exec(`DROP TABLE IF EXISTS public.milestone_responsible_users;`).Error
 
 	return
 }

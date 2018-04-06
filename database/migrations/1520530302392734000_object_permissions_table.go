@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateObjectPermissionsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.object_permissions (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.object_permissions (
     id bigserial NOT NULL ,
     user_id bigint NOT NULL,
     object_id bigint NOT NULL,
@@ -27,16 +27,16 @@ func (Migration) MigrateObjectPermissionsTable() (e error) {
         REFERENCES public.users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackObjectPermissionsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.object_permissions;")
+	e = db.Exec("DROP TABLE IF EXISTS public.object_permissions;").Error
 
 	return
 }

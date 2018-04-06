@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateCalendarSystemsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.calendar_systems (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.calendar_systems (
     id serial NOT NULL,
     name varchar(100),
     component_name varchar(100),
@@ -16,16 +16,16 @@ func (Migration) MigrateCalendarSystemsTable() (e error) {
     deleted_at timestamp with time zone,
 
     CONSTRAINT calendar_systems_pkey PRIMARY KEY (id)
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackCalendarSystemsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.calendar_systems;")
+	e = db.Exec("DROP TABLE IF EXISTS public.calendar_systems CASCADE;").Error
 
 	return
 }

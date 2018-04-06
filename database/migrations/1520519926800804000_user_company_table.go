@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateUserCompanyTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.user_company (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.user_company (
     id bigserial NOT NULL,
     user_id bigint NOT NULL,
     company_id bigint NOT NULL,
@@ -31,16 +31,16 @@ func (Migration) MigrateUserCompanyTable() (e error) {
         REFERENCES public.users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackUserCompanyTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.user_company;")
+	e = db.Exec("DROP TABLE IF EXISTS public.user_company;").Error
 
 	return
 }

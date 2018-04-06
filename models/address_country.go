@@ -17,3 +17,7 @@ type Country struct {
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time `json:"-"`
 }
+
+func (Country) TableName() string {
+	return "public.address_countries"
+}

@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateTasksTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.tasks (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.tasks (
     id bigserial NOT NULL,
     title varchar (255),
     order_id integer DEFAULT 1,
@@ -42,16 +42,16 @@ func (Migration) MigrateTasksTable() (e error) {
         REFERENCES public.users (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackTasksTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.tasks CASCADE;")
+	e = db.Exec("DROP TABLE IF EXISTS public.tasks CASCADE;").Error
 
 	return
 }

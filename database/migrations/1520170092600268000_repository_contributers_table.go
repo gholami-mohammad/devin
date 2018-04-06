@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateRepositoryContributersTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.repository_contributers(
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.repository_contributers(
     id bigserial NOT NULL,
     repository_id bigint NOT NULL,
     user_id bigint NOT NULL,
@@ -33,16 +33,16 @@ func (Migration) MigrateRepositoryContributersTable() (e error) {
         REFERENCES public.users (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackRepositoryContributersTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.repository_contributers;")
+	e = db.Exec("DROP TABLE IF EXISTS public.repository_contributers;").Error
 
 	return
 }

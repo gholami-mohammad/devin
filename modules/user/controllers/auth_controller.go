@@ -44,7 +44,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	e, errorMessages := validateSignipInputs(userReq)
+	e, errorMessages := validateSigninInputs(userReq)
 	if e != nil {
 		err := helpers.ErrorResponse{
 			Message:   e.Error(),
@@ -55,15 +55,15 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
 	var user models.User
 
 	isEmail := helpers.Validator{}.IsValidEmailFormat(userReq.Email)
 	if isEmail {
-		db.Model(&user).Where("email=?", userReq.Email).First()
+		db.Where("email=?", userReq.Email).First(&user)
 	} else {
-		db.Model(&user).Where("username=?", userReq.Email).First()
+		db.Where("username=?", userReq.Email).First(&user)
 	}
 
 	if user.ID == 0 {
@@ -106,8 +106,8 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&user)
 }
 
-// validateSignipInputs check signin requirments
-func validateSignipInputs(user SigninReq) (e error, errMessages map[string][]string) {
+// validateSigninInputs check signin requirments
+func validateSigninInputs(user SigninReq) (e error, errMessages map[string][]string) {
 	// Validate inputs
 	hasError := false
 	errMessages = make(map[string][]string)

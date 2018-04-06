@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateAddressProvincesTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.address_provinces (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.address_provinces (
     id serial NOT NULL,
     name varchar(255),
     country_id integer NOT NULL,
@@ -20,16 +20,16 @@ func (Migration) MigrateAddressProvincesTable() (e error) {
         ON DELETE CASCADE
         ON UPDATE CASCADE
 
-    );`)
+    );`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackAddressProvincesTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.address_provinces CASCADE;")
+	e = db.Exec("DROP TABLE IF EXISTS public.address_provinces CASCADE;").Error
 
 	return
 }

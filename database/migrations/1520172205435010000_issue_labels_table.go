@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateIssueLabelsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.issue_labels(
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.issue_labels(
     id bigserial NOT NULL,
     label varchar(50) NOT NULL,
     color varchar(25),
@@ -26,16 +26,16 @@ func (Migration) MigrateIssueLabelsTable() (e error) {
         REFERENCES public.users (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackIssueLabelsTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.issue_labels;")
+	e = db.Exec("DROP TABLE IF EXISTS public.issue_labels;").Error
 
 	return
 }

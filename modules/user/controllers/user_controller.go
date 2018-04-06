@@ -52,9 +52,9 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//Load current user data from DB
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	e = db.Model(&user).Where("id=?", user.ID).First()
+	e = db.Where("id=?", user.ID).First(&user).Error
 	if e != nil {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusInternalServerError,
@@ -114,7 +114,7 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.PublicProfile = profile
-	_, e = db.Model(&user).Where("id=?", user.ID).Update(&profile)
+	e = db.Model(&user).Where("id=?", user.ID).Update(&profile).Error
 	if e != nil {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusInternalServerError,
@@ -143,12 +143,12 @@ func Whoami(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
 	var user models.User
 
 	//Loading required data from DB
-	e = db.Model(&user).Where("id=?", authUser.ID).First()
+	e = db.Where("id=?", authUser.ID).First(&user).Error
 	if e != nil {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusUnauthorized,
@@ -168,15 +168,15 @@ func Whoami(w http.ResponseWriter, r *http.Request) {
 // required to render profile edit form
 func ProfileBasicInfo(w http.ResponseWriter, r *http.Request) {
 	info := make(map[string]interface{})
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
 
 	var countries []models.Country
-	db.Model(&countries).Where("deleted_at IS NULL").Select(&countries)
+	db.Find(&countries)
 	var dateFormates []models.DateFormat
-	db.Model(&dateFormates).Where("deleted_at IS NULL").Select(&dateFormates)
+	db.Find(&dateFormates)
 	var calendarSystems []models.CalendarSystem
-	db.Model(&calendarSystems).Where("deleted_at IS NULL").Select(&calendarSystems)
+	db.Find(&calendarSystems)
 
 	info["LocalizationLanguages"] = countries
 	info["DateFormats"] = dateFormates

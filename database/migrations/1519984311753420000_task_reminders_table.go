@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateTaskRemindersTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_reminders (
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.task_reminders (
     id bigserial NOT NULL,
     task_id bigint NOT NULL,
     title varchar(255),
@@ -24,16 +24,16 @@ func (Migration) MigrateTaskRemindersTable() (e error) {
         REFERENCES public.users (id) MATCH SIMPLE
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackTaskRemindersTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.task_reminders CASCADE;")
+	e = db.Exec("DROP TABLE IF EXISTS public.task_reminders CASCADE;").Error
 
 	return
 }

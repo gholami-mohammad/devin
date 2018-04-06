@@ -4,9 +4,9 @@ import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) MigrateIssuesTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS public.issues(
+	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.issues(
     id bigserial NOT NULL,
     project_id bigint NOT NULL,
     repository_id bigint NOT NULL,
@@ -33,16 +33,16 @@ func (Migration) MigrateIssuesTable() (e error) {
         REFERENCES public.users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-    )`)
+    )`).Error
 
 	return
 }
 
 // Rollback the database to previous version
 func (Migration) RollbackIssuesTable() (e error) {
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
-	_, e = db.Exec("DROP TABLE IF EXISTS public.issues CASCADE;")
+	e = db.Exec("DROP TABLE IF EXISTS public.issues CASCADE;").Error
 
 	return
 }

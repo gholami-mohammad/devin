@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-pg/pg"
+	"github.com/jinzhu/gorm"
 
 	"devin/database"
 	"devin/helpers"
@@ -62,7 +62,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.NewPGInstance()
+	db := database.NewGORMInstance()
 	defer db.Close()
 	// Check for duplication of email
 	is, _ := isUniqueValue(db, "email", user.Email, 0)
@@ -98,7 +98,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	user.SetNewEmailVerificationToken()
 
 	// Saving data
-	_, e = db.Model(&user).Insert(&user)
+	e = db.Save(&user).Error
 
 	if e != nil {
 		err := helpers.ErrorResponse{
@@ -147,18 +147,23 @@ func validateSignupInputs(user models.User) (e error, errMessages map[string][]s
 
 // isUniqueValue check duplication of value in given column of users table.
 // ignoredID use for ignore given ID of checking. Set ignoredID to 0 if you want to check all records.
-func isUniqueValue(db *pg.DB, columnName string, value string, ignoredID uint64) (isUnique bool, e error) {
-	qry := db.Model(&models.User{}).Where(columnName+"=?", value)
+func isUniqueValue(db *gorm.DB, columnName string, value string, ignoredID uint64) (isUnique bool, e error) {
+	var cnt struct {
+		Cnt uint64
+	}
+	sql := `SELECT count(*) as cnt FROM users WHERE ` + columnName + `=? `
 	if ignoredID != 0 {
-		qry = qry.Where("id != ?", ignoredID)
+		sql += "id != ?"
+		e = db.Raw(sql, value, ignoredID).Scan(&cnt).Error
+	} else {
+		e = db.Raw(sql, value).Scan(&cnt).Error
 	}
 
-	cnt, e := qry.Count()
 	if e != nil {
 		return false, e
 	}
 
-	if cnt != 0 {
+	if cnt.Cnt != 0 {
 		return false, nil
 	}
 	return true, nil

@@ -29,7 +29,7 @@ func main() {
 		}
 	case "db:seed":
 		{
-			fmt.Println("Seed finished")
+			helpers.SeedDB()
 		}
 	case "migrate:rollback":
 		{

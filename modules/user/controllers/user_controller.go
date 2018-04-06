@@ -173,13 +173,16 @@ func ProfileBasicInfo(w http.ResponseWriter, r *http.Request) {
 
 	var countries []models.Country
 	db.Find(&countries)
-	var dateFormates []models.DateFormat
-	db.Find(&dateFormates)
+	var dateFormats []models.DateFormat
+	db.Find(&dateFormats)
+	var timeFormats []models.TimeFormat
+	db.Find(&timeFormats)
 	var calendarSystems []models.CalendarSystem
 	db.Find(&calendarSystems)
 
 	info["LocalizationLanguages"] = countries
-	info["DateFormats"] = dateFormates
+	info["DateFormats"] = dateFormats
+	info["TimeFormats"] = timeFormats
 	info["CalendarSystems"] = calendarSystems
 	info["OfficePhoneCountryCodes"] = countries
 	info["HomePhoneCountryCodes"] = countries

@@ -22,8 +22,8 @@ func SeedDB() {
 	db.Exec(`insert into calendar_systems (id, name, component_name, filter_name) values (1, 'Jalali', 'jdate', 'jdate');`)
 	db.Exec(`insert into calendar_systems (id, name, component_name, filter_name) values (2, 'Gregorian', 'gregorian', 'gregorian');`)
 
-	db.Exec(`insert into date_formats (id, name) values (1, '2005-01-02');`)
-	db.Exec(`insert into date_formats (id, name) values (2, '2005/01/02');`)
+	db.Exec(`insert into date_formats (id, name) values (1, '2006-01-02');`)
+	db.Exec(`insert into date_formats (id, name) values (2, '2006/01/02');`)
 
 	db.Exec(`insert into time_formats (id, name) values (1, '15:04:05');`)
 	db.Exec(`insert into time_formats (id, name) values (2, '15:04');`)

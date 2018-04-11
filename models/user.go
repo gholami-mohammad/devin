@@ -248,7 +248,7 @@ func (user User) IsUniqueValue(db *gorm.DB, columnName string, value string, ign
 	}
 	sql := `SELECT count(*) as cnt FROM users WHERE ` + columnName + `=? `
 	if ignoredID != 0 {
-		sql += "id != ?"
+		sql += " AND id != ?"
 		e = db.Raw(sql, value, ignoredID).Scan(&cnt).Error
 	} else {
 		e = db.Raw(sql, value).Scan(&cnt).Error

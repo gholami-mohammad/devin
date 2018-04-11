@@ -9,6 +9,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	jwt_request "github.com/dgrijalva/jwt-go/request"
+	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 
 	"devin/crypto"
@@ -237,6 +238,30 @@ func (user User) GenerateNewTokenString(claim Claim) (string, *helpers.ErrorResp
 	}
 
 	return tokenString, nil
+}
+
+// IsUniqueValue check duplication of value in given column of users table.
+// ignoredID use for ignore given ID of checking. Set ignoredID to 0 if you want to check all records.
+func (user User) IsUniqueValue(db *gorm.DB, columnName string, value string, ignoredID uint64) (isUnique bool, e error) {
+	var cnt struct {
+		Cnt uint64
+	}
+	sql := `SELECT count(*) as cnt FROM users WHERE ` + columnName + `=? `
+	if ignoredID != 0 {
+		sql += "id != ?"
+		e = db.Raw(sql, value, ignoredID).Scan(&cnt).Error
+	} else {
+		e = db.Raw(sql, value).Scan(&cnt).Error
+	}
+
+	if e != nil {
+		return false, e
+	}
+
+	if cnt.Cnt != 0 {
+		return false, nil
+	}
+	return true, nil
 }
 
 // Claim is claim structure of JWT

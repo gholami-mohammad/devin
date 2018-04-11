@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jinzhu/gorm"
-
 	"devin/database"
 	"devin/helpers"
 	"devin/models"
@@ -65,7 +63,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	db := database.NewGORMInstance()
 	defer db.Close()
 	// Check for duplication of email
-	is, _ := isUniqueValue(db, "email", user.Email, 0)
+	is, _ := user.IsUniqueValue(db, "email", user.Email, 0)
 	if is == false {
 		messages := make(map[string][]string)
 		messages["Email"] = []string{"This email is already registered."}
@@ -79,7 +77,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 	}
 	// Check for duplication of username
-	is, _ = isUniqueValue(db, "username", user.Username, 0)
+	is, _ = user.IsUniqueValue(db, "username", user.Username, 0)
 	if is == false {
 		messages := make(map[string][]string)
 		messages["Username"] = []string{"This username is already registered."}
@@ -143,28 +141,4 @@ func validateSignupInputs(user models.User) (e error, errMessages map[string][]s
 	}
 
 	return nil, nil
-}
-
-// isUniqueValue check duplication of value in given column of users table.
-// ignoredID use for ignore given ID of checking. Set ignoredID to 0 if you want to check all records.
-func isUniqueValue(db *gorm.DB, columnName string, value string, ignoredID uint64) (isUnique bool, e error) {
-	var cnt struct {
-		Cnt uint64
-	}
-	sql := `SELECT count(*) as cnt FROM users WHERE ` + columnName + `=? `
-	if ignoredID != 0 {
-		sql += "id != ?"
-		e = db.Raw(sql, value, ignoredID).Scan(&cnt).Error
-	} else {
-		e = db.Raw(sql, value).Scan(&cnt).Error
-	}
-
-	if e != nil {
-		return false, e
-	}
-
-	if cnt.Cnt != 0 {
-		return false, nil
-	}
-	return true, nil
 }

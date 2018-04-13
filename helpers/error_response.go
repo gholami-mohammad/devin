@@ -17,3 +17,14 @@ func NewErrorResponse(w http.ResponseWriter, err *ErrorResponse) error {
 
 	return json.NewEncoder(w).Encode(&err)
 }
+
+func NewSuccessResponse(w http.ResponseWriter, message string) error {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	var ok struct {
+		Message string
+	}
+	ok.Message = message
+
+	return json.NewEncoder(w).Encode(&ok)
+}

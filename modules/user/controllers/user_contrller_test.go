@@ -408,3 +408,93 @@ func TestProfileBasicInfo(t *testing.T) {
 		t.Fatal("Response dose not contains all keys")
 	}
 }
+
+func TestUpdatePassword(t *testing.T) {
+	_, _, tokenString := getValidUser(1, true)
+	defer deleteTestUser(1)
+
+	route := mux.NewRouter()
+	path := "/user/{id}/update_username"
+	route.Handle(path, http.HandlerFunc(UpdatePassword))
+	route.Use(middlewares.Authenticate)
+
+	t.Run("Invalid request body", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), strings.NewReader("Bad Request body"))
+
+		req.Header.Add("Authorization", tokenString)
+		req.Header.Add("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+
+		if res.StatusCode != http.StatusInternalServerError {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Invalid request body") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("Small password length", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), strings.NewReader(`{"Password": "min", "PasswordVerification": "min"}`))
+
+		req.Header.Add("Authorization", tokenString)
+		req.Header.Add("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "at least 6 characters") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("Verification not match", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), strings.NewReader(`{"Password": "abcdef", "PasswordVerification": "ghijke"}`))
+
+		req.Header.Add("Authorization", tokenString)
+		req.Header.Add("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Password verification does not match") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("OK", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), strings.NewReader(`{"Password": "abcdef", "PasswordVerification": "abcdef"}`))
+
+		req.Header.Add("Authorization", tokenString)
+		req.Header.Add("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+
+		if res.StatusCode != http.StatusOK {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Password updated") {
+			t.Fatal("Invalid response message")
+		}
+	})
+}

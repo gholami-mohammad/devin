@@ -157,6 +157,8 @@ func UpdateUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	reqModel.Username = strings.ToLower(reqModel.Username)
+
 	//Check for valid characters
 	isValidUsername := helpers.Validator{}.IsValidUsernameFormat(reqModel.Username)
 	if isValidUsername == false {

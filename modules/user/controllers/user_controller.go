@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -268,4 +269,72 @@ func ProfileBasicInfo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&info)
+}
+
+// UpdatePassword handle updating of user's password
+func UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	db := database.NewGORMInstance()
+	defer db.Close()
+	user, err := handleProfileSharedErrors(r, db)
+	if err != nil {
+		helpers.NewErrorResponse(w, err)
+		return
+	}
+	var reqModel struct {
+		Password             string
+		PasswordVerification string
+	}
+	defer r.Body.Close()
+	e := json.NewDecoder(r.Body).Decode(&reqModel)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusInternalServerError,
+			Message:   "Invalid request body",
+		}
+		log.Println("Error on password data decoding,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	//Check min length
+	if len(reqModel.Password) < 6 {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnprocessableEntity,
+			Message:   "Invalid password",
+		}
+		err.Errors = make(map[string][]string)
+		err.Errors["Password"] = []string{"New password must has at least 6 characters."}
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+	//Check matching
+	if !strings.EqualFold(reqModel.Password, reqModel.PasswordVerification) {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnprocessableEntity,
+			Message:   "Invalid password",
+		}
+		err.Errors = make(map[string][]string)
+		err.Errors["VerifyPassword"] = []string{"Password verification does not match."}
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+	//Change password
+	user.SetEncryptedPassword(reqModel.Password)
+	e = db.Model(&user).Where("id=?", user.ID).Update(&user).Error
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusInternalServerError,
+			Message:   "Error on updating password.",
+		}
+		log.Println("Error on updating password,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	helpers.NewSuccessResponse(w, "Password updated.")
+	return
 }

@@ -17,6 +17,7 @@ func LoadRoutes(r *mux.Router) *mux.Router {
 	secureArea.Use(middlewares.Authenticate)
 	secureArea.HandleFunc("/user/{id:[0-9]+}/update", user_ctrl.UpdateProfile).Methods(http.MethodPost)
 	secureArea.HandleFunc("/user/{id:[0-9]+}/update_username", user_ctrl.UpdateUsername).Methods(http.MethodPost)
+	secureArea.HandleFunc("/user/{id:[0-9]+}/update_password", user_ctrl.UpdatePassword).Methods(http.MethodPost)
 	secureArea.HandleFunc("/whoami", user_ctrl.Whoami).Methods(http.MethodGet)
 	secureArea.HandleFunc("/profile_basic_info", user_ctrl.ProfileBasicInfo).Methods(http.MethodGet)
 

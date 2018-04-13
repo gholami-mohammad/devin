@@ -391,3 +391,20 @@ func TestUpdateUsername(t *testing.T) {
 	})
 
 }
+
+func TestProfileBasicInfo(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(ProfileBasicInfo))
+	defer server.Close()
+
+	res, e := http.Get(server.URL)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer res.Body.Close()
+	bts, _ := ioutil.ReadAll(res.Body)
+	str := string(bts)
+
+	if !strings.Contains(str, "LocalizationLanguages") || !strings.Contains(str, "DateFormats") || !strings.Contains(str, "TimeFormats") || !strings.Contains(str, "CalendarSystems") || !strings.Contains(str, "OfficePhoneCountryCodes") || !strings.Contains(str, "HomePhoneCountryCodes") || !strings.Contains(str, "CellPhoneCountryCodes") || !strings.Contains(str, "FaxCountryCodes") || !strings.Contains(str, "Countries") {
+		t.Fatal("Response dose not contains all keys")
+	}
+}

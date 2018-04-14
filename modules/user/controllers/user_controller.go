@@ -243,6 +243,70 @@ func Whoami(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&user)
 }
 
+// Whois load profile data of given userID
+func Whois(w http.ResponseWriter, r *http.Request) {
+	authUser, _, e := models.User{}.ExtractUserFromRequestContext(r)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnauthorized,
+			Message:   "Auhtentication failed.",
+		}
+		log.Println("Auhtentication failed,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	userID, ok := mux.Vars(r)["id"]
+	if !ok {
+		err := helpers.ErrorResponse{
+			Message:   "Invalid User ID.",
+			ErrorCode: http.StatusUnprocessableEntity,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	var user models.User
+	user.ID, e = strconv.ParseUint(userID, 10, 64)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			Message:   "Invalid User ID. Just integer values accepted",
+			ErrorCode: http.StatusUnprocessableEntity,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	if !policies.CanViewProfile(authUser, user) {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusForbidden,
+			Message:   "This action is not allowed for you.",
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	db := database.NewGORMInstance()
+	defer db.Close()
+
+	//Loading required data from DB
+	e = db.Where("id=?", userID).First(&user).Error
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnauthorized,
+			Message:   "Auhtentication failed.",
+		}
+		log.Println("Auhtentication failed,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&user)
+}
+
 // ProfileBasicInfo return array of basic informations
 // required to render profile edit form
 func ProfileBasicInfo(w http.ResponseWriter, r *http.Request) {

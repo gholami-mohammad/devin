@@ -28,8 +28,8 @@ type User struct {
 	Email                  string
 	Password               string         `json:"-"`
 	PlainPassword          string         `json:"Password" sql:"-"`
-	UserType               uint           `json:"-" doc:"1: authenticatable user, 2: company"`
-	UserCompanyMapping     []*UserCompany `doc:"نگاشت کاربران عضو در هر کمپانی"`
+	UserType               uint           `json:"-" doc:"1: authenticatable user, 2: organization"`
+	UserOrganizationMapping     []*UserOrganization `doc:"نگاشت کاربران عضو در هر کمپانی"`
 	OwnerID                *uint64        `doc:"کد یکتای مالک و سازنده ی یک کمپانی. این فیلد برای حساب کاربری افراد میتواند خالی باشد."`
 	Owner                  *User
 	EmailVerified          bool
@@ -46,7 +46,7 @@ type PublicProfile struct {
 	FirstName                *string
 	LastName                 *string
 	Avatar                   *string
-	JobTitle                 *string         `doc:"User's job title in a company"`
+	JobTitle                 *string         `doc:"User's job title in a organization"`
 	LocalizationLanguageID   *uint           `doc:"FK to countries table to get localization settings"`
 	LocalizationLanguage     *Country        `doc:"Belongs to Country model to load i18n settings"`
 	DateFormat               *string         `doc:"Default date formate to show dates in UI. List of date formates stored in 'date_formats' table, but for more DB performance, directly saved here."`

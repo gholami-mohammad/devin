@@ -15,15 +15,15 @@ type Project struct {
 	StartDate               *time.Time      `doc:"تاریخ شروع پروژه"`
 	ScheduledCompletionDate *time.Time      `doc:"تاریخ پیش بینی شده برای کامل و تمام شدن پروژه"`
 	CompletionDate          *time.Time      `doc:"تاریخ واقعی اتمام پروژه که توسط مدیر کل پروژه این تاریخ ثبت میشود"`
-	Users                   []*ProjectUser  `doc:"List of users who can access this project. This list must be from the company peoples."`
+	Users                   []*ProjectUser  `doc:"List of users who can access this project. This list must be from the organization peoples."`
 	Tags                    []*TaggedObject `doc:"A HasMany relation, where ModuleID = models.MODULE_PROJECT"`
 	DefaultTaskViewID       uint            `doc:"For now, 2 task view is availabel: 1=List view ; 2=Board view"`
 	StatusID                uint            `doc:"active, archived, pending, etc"`
 	Status                  *ProjectStatus
 	OwnerUserID             uint64 `doc:"مالک وسازنده ی این پروژه"`
 	OwnerUser               *User
-	OwnerCompanyID          uint64 `doc:"این پروژه در کدام سازمان ساخته شده است"`
-	OwnerCompany            *User
+	OwnerOrganizationID          uint64 `doc:"این پروژه در کدام سازمان ساخته شده است"`
+	OwnerOrganization            *User
 	ProjectManagerID        uint64 `doc:"مدیر پروژه و مسئول این پروژه کیست"`
 	ProjectManager          *User
 	GitRepositories         []*Repository

@@ -8,7 +8,7 @@ func (Migration) MigrateTagsTable() (e error) {
 	defer db.Close()
 	e = db.Exec(`CREATE TABLE IF NOT EXISTS public.tags (
     id bigserial NOT NULL,
-    company_id bigint NOT NULL,
+    organization_id bigint NOT NULL,
     title varchar(255),
     created_by_id bigint NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
@@ -16,7 +16,7 @@ func (Migration) MigrateTagsTable() (e error) {
     deleted_at timestamp with time zone,
 
     CONSTRAINT tags_pkey PRIMARY KEY (id),
-    CONSTRAINT tags_company_id_users_id FOREIGN KEY (company_id)
+    CONSTRAINT tags_organization_id_users_id FOREIGN KEY (organization_id)
         REFERENCES public.users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,

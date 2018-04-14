@@ -22,22 +22,22 @@ func Init() {
 
 // User : model of all system users
 type User struct {
-	tableName              struct{} `sql:"public.users"`
-	ID                     uint64
-	Username               string
-	Email                  string
-	Password               string         `json:"-"`
-	PlainPassword          string         `json:"Password" sql:"-"`
-	UserType               uint           `json:"-" doc:"1: authenticatable user, 2: organization"`
-	UserOrganizationMapping     []*UserOrganization `doc:"نگاشت کاربران عضو در هر کمپانی"`
-	OwnerID                *uint64        `doc:"کد یکتای مالک و سازنده ی یک کمپانی. این فیلد برای حساب کاربری افراد میتواند خالی باشد."`
-	Owner                  *User
-	EmailVerified          bool
-	EmailVerificationToken *string `json:"-"`
-	IsRootUser             bool    `json:"-"`
-	CreatedAt              time.Time
-	UpdatedAt              time.Time
-	DeletedAt              *time.Time `json:"-"`
+	tableName               struct{} `sql:"public.users"`
+	ID                      uint64
+	Username                string
+	Email                   string
+	Password                string              `json:"-"`
+	PlainPassword           string              `json:"Password" sql:"-"`
+	UserType                uint                `json:"-" doc:"1: authenticatable user, 2: organization"`
+	UserOrganizationMapping []*UserOrganization `doc:"نگاشت کاربران عضو در هر کمپانی"`
+	OwnerID                 *uint64             `doc:"کد یکتای مالک و سازنده ی یک کمپانی. این فیلد برای حساب کاربری افراد میتواند خالی باشد."`
+	Owner                   *User
+	EmailVerified           bool
+	EmailVerificationToken  *string `json:"-"`
+	IsRootUser              bool    `json:"-"`
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
+	DeletedAt               *time.Time `json:"-"`
 
 	PublicProfile
 }
@@ -55,12 +55,16 @@ type PublicProfile struct {
 	CalendarSystem           *CalendarSystem `sql:"-" doc:"Which calendar system will used to use in datepicker and showing dates "`
 	OfficePhoneCountryCodeID *uint           `doc:"FK to countries table"`
 	OfficePhoneCountryCode   *Country        `doc:"Belogs to Country"`
+	OfficePhoneNumber        *string         ``
 	HomePhoneCountryCodeID   *uint           `doc:"FK to countries table"`
 	HomePhoneCountryCode     *Country        `doc:"Belogs to Country"`
+	HomePhoneNumber          *string         ``
 	CellPhoneCountryCodeID   *uint           `doc:"FK to countries table"`
 	CellPhoneCountryCode     *Country        `doc:"Belogs to Country"`
+	CellPhoneNumber          *string         ``
 	FaxCountryCodeID         *uint           `doc:"FK to countries table"`
 	FaxCountryCode           *Country        `doc:"Belogs to Country"`
+	FaxNumber                *string         ``
 	CountryID                *uint           `doc:"#Address, FK to countries table. To improve database performance and ignore inner joings on SQL queries to load this data."`
 	Country                  *Country        `doc:"Belogs to Country"`
 	ProvinceID               *uint           `doc:"#Address, FK to provinces table. To improve database performance and ignore inner joings on SQL queries to load this data."`

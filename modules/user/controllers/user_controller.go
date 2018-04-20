@@ -278,15 +278,6 @@ func Whois(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !policies.CanViewProfile(authUser, user) {
-		err := helpers.ErrorResponse{
-			ErrorCode: http.StatusForbidden,
-			Message:   "This action is not allowed for you.",
-		}
-		helpers.NewErrorResponse(w, &err)
-		return
-	}
-
 	db := database.NewGORMInstance()
 	defer db.Close()
 
@@ -304,6 +295,15 @@ func Whois(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.SetFullName()
+
+	if !policies.CanViewProfile(authUser, user) {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusForbidden,
+			Message:   "This action is not allowed for you.",
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
 
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&user)

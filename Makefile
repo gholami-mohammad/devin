@@ -40,3 +40,7 @@ test_middlewares:
 test_crypto:
 	go test -v --coverprofile=cover.out devin/crypto
 	go tool cover --html=cover.out
+
+test_org:
+	go test -v --coverprofile=cover.out devin/modules/organization/controllers
+	go tool cover --html=cover.out

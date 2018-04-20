@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -271,7 +272,18 @@ func (user User) IsUniqueValue(db *gorm.DB, columnName string, value string, ign
 }
 
 func (user *User) SetFullName() {
-	full := fmt.Sprintf("%v %v", *user.FirstName, *user.LastName)
+	if user.FirstName == nil && user.LastName == nil {
+		return
+	}
+	fn := ""
+	if user.FirstName != nil {
+		fn = *user.FirstName
+	}
+	ln := ""
+	if user.LastName != nil {
+		ln = *user.LastName
+	}
+	full := strings.TrimSpace(fmt.Sprintf("%v %v", fn, ln))
 	user.FullName = &full
 }
 

@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -22,30 +23,31 @@ func Init() {
 
 // User : model of all system users
 type User struct {
-	tableName               struct{} `sql:"public.users"`
-	ID                      uint64
-	Username                string
-	Email                   string
+	tableName               struct{}            `sql:"public.users"`
+	ID                      uint64              ``
+	Username                string              ``
+	Email                   string              ``
 	Password                string              `json:"-"`
 	PlainPassword           string              `json:"Password" sql:"-"`
 	UserType                uint                `json:"-" doc:"1: authenticatable user, 2: organization"`
 	UserOrganizationMapping []*UserOrganization `doc:"نگاشت کاربران عضو در هر کمپانی"`
 	OwnerID                 *uint64             `doc:"کد یکتای مالک و سازنده ی یک کمپانی. این فیلد برای حساب کاربری افراد میتواند خالی باشد."`
-	Owner                   *User
-	EmailVerified           bool
-	EmailVerificationToken  *string `json:"-"`
-	IsRootUser              bool    `json:"-"`
-	CreatedAt               time.Time
-	UpdatedAt               time.Time
-	DeletedAt               *time.Time `json:"-"`
+	Owner                   *User               ``
+	EmailVerified           bool                ``
+	EmailVerificationToken  *string             `json:"-"`
+	IsRootUser              bool                `json:"-"`
+	CreatedAt               time.Time           ``
+	UpdatedAt               time.Time           ``
+	DeletedAt               *time.Time          `json:"-"`
 
 	PublicProfile
 }
 
 type PublicProfile struct {
-	FirstName                *string
-	LastName                 *string
-	Avatar                   *string
+	FirstName                *string         ``
+	LastName                 *string         ``
+	FullName                 *string         `sql:"-"`
+	Avatar                   *string         ``
 	JobTitle                 *string         `doc:"User's job title in a organization"`
 	LocalizationLanguageID   *uint           `doc:"FK to countries table to get localization settings"`
 	LocalizationLanguage     *Country        `doc:"Belongs to Country model to load i18n settings"`
@@ -266,6 +268,11 @@ func (user User) IsUniqueValue(db *gorm.DB, columnName string, value string, ign
 		return false, nil
 	}
 	return true, nil
+}
+
+func (user *User) SetFullName() {
+	full := fmt.Sprintf("%v %v", *user.FirstName, *user.LastName)
+	user.FullName = &full
 }
 
 // Claim is claim structure of JWT

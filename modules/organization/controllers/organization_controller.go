@@ -81,6 +81,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 	reqModel.FirstName = reqModel.FullName
 	reqModel.Username = strings.ToLower(reqModel.Username)
 	reqModel.Email = strings.ToLower(reqModel.Email)
+	reqModel.UserType = 2 //2 for organizations
 
 	if !policies.CanCreateOrganization(authUser, reqModel) {
 		err := helpers.ErrorResponse{
@@ -125,7 +126,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Check for duplication of email
-	is, _ := reqModel.IsUniqueValue(db, "email", reqModel.Email, 0)
+	is, _ := reqModel.IsUniqueValue(db, "email", reqModel.Email, reqModel.ID)
 	if is == false {
 
 		err := helpers.ErrorResponse{
@@ -140,7 +141,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 
 	}
 	// Check for duplication of username
-	is, _ = reqModel.IsUniqueValue(db, "username", reqModel.Username, 0)
+	is, _ = reqModel.IsUniqueValue(db, "username", reqModel.Username, reqModel.ID)
 	if is == false {
 		err := helpers.ErrorResponse{
 			Message:   "Invalid username.",

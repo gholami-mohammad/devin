@@ -303,6 +303,8 @@ func Whois(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user.SetFullName()
+
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&user)
 }

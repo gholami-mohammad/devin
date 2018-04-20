@@ -64,10 +64,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		helpers.NewErrorResponse(w, &err)
 		return
 	}
-	var reqModel struct {
-		models.User
-		Fullname *string
-	}
+	var reqModel models.User
 
 	e = json.NewDecoder(r.Body).Decode(&reqModel)
 	if e != nil {
@@ -80,12 +77,12 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reqModel.User.OwnerID = &ownerID
-	reqModel.User.FirstName = reqModel.Fullname
-	reqModel.User.Username = strings.ToLower(reqModel.User.Username)
-	reqModel.User.Email = strings.ToLower(reqModel.User.Email)
+	reqModel.OwnerID = &ownerID
+	reqModel.FirstName = reqModel.FullName
+	reqModel.Username = strings.ToLower(reqModel.Username)
+	reqModel.Email = strings.ToLower(reqModel.Email)
 
-	if !policies.CanCreateOrganization(authUser, reqModel.User) {
+	if !policies.CanCreateOrganization(authUser, reqModel) {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusForbidden,
 			Message:   "This action is not allowed for you.",
@@ -95,7 +92,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// username validator
-	isValidUsername := helpers.Validator{}.IsValidUsernameFormat(reqModel.User.Username)
+	isValidUsername := helpers.Validator{}.IsValidUsernameFormat(reqModel.Username)
 	if isValidUsername == false {
 
 		err := helpers.ErrorResponse{
@@ -110,7 +107,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// email validator
-	isValidEmail := helpers.Validator{}.IsValidEmailFormat(reqModel.User.Email)
+	isValidEmail := helpers.Validator{}.IsValidEmailFormat(reqModel.Email)
 	if isValidEmail == false {
 
 		err := helpers.ErrorResponse{
@@ -128,7 +125,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Check for duplication of email
-	is, _ := reqModel.User.IsUniqueValue(db, "email", reqModel.User.Email, 0)
+	is, _ := reqModel.IsUniqueValue(db, "email", reqModel.Email, 0)
 	if is == false {
 
 		err := helpers.ErrorResponse{
@@ -143,7 +140,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 
 	}
 	// Check for duplication of username
-	is, _ = reqModel.User.IsUniqueValue(db, "username", reqModel.User.Username, 0)
+	is, _ = reqModel.IsUniqueValue(db, "username", reqModel.Username, 0)
 	if is == false {
 		err := helpers.ErrorResponse{
 			Message:   "Invalid username.",
@@ -157,7 +154,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	e = db.Model(&reqModel.User).Save(&reqModel.User).Error
+	e = db.Model(&reqModel).Save(&reqModel).Error
 	if e != nil {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusInternalServerError,

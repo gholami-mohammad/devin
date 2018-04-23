@@ -2,8 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -405,4 +408,144 @@ func UpdatePassword(w http.ResponseWriter, r *http.Request) {
 
 	helpers.NewSuccessResponse(w, "Password updated.")
 	return
+}
+
+// UpdateAvatar handle updating of user/organization avatar/logo
+func UpdateAvatar(w http.ResponseWriter, r *http.Request) {
+	authUser, _, e := models.User{}.ExtractUserFromRequestContext(r)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnauthorized,
+			Message:   "Auhtentication failed.",
+		}
+		log.Println("Auhtentication failed,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	userID, ok := mux.Vars(r)["id"]
+	if !ok {
+		err := helpers.ErrorResponse{
+			Message:   "Invalid User ID.",
+			ErrorCode: http.StatusUnprocessableEntity,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+	var user models.User
+	user.ID, e = strconv.ParseUint(userID, 10, 64)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			Message:   "Invalid User ID. Just integer values accepted",
+			ErrorCode: http.StatusUnprocessableEntity,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+	db := database.NewGORMInstance()
+	defer db.Close()
+
+	//Loading required data from DB
+	e = db.Where("id=?", userID).First(&user).Error
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnauthorized,
+			Message:   "Auhtentication failed.",
+		}
+		log.Println("Auhtentication failed,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	if !policies.CanEditUser(authUser, user) {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusForbidden,
+			Message:   "This action is not allowed for you.",
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	r.ParseMultipartForm(1024)
+	file, fileHeader, e := r.FormFile("AvatarFile")
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnprocessableEntity,
+			Message:   "Error on updating avatar.",
+		}
+		err.Errors = make(map[string][]string)
+		err.Errors["AvatarFile"] = []string{"Can't read file"}
+		log.Println("Error on updating avatar,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+	defer file.Close()
+	mimeType := fileHeader.Header.Get("Content-Type")
+	if !isImageMimeType(mimeType) {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnprocessableEntity,
+			Message:   "Error on updating avatar.",
+		}
+		err.Errors = make(map[string][]string)
+		err.Errors["AvatarFile"] = []string{"Invalid image type. Supported formats are jpg, jpeg and png"}
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	bts, e := ioutil.ReadAll(file)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnprocessableEntity,
+			Message:   "Error on updating avatar.",
+		}
+		err.Errors = make(map[string][]string)
+		err.Errors["AvatarFile"] = []string{"Can't update avatar"}
+		log.Println("Error on updating avatar,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+	parts := strings.Split(fileHeader.Filename, ".")
+	fileName := fmt.Sprintf("public/%v%v.%v", helpers.RandomString(10), helpers.RandomString(10), parts[len(parts)-1])
+	e = ioutil.WriteFile(fileName, bts, 0666)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnprocessableEntity,
+			Message:   "Error on updating avatar.",
+		}
+		err.Errors = make(map[string][]string)
+		err.Errors["AvatarFile"] = []string{"Can't update avatar, IO Error"}
+		log.Println("Error on updating avatar,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+	if user.Avatar != nil {
+		oldFile := user.Avatar
+		os.Remove(*oldFile)
+	}
+	user.Avatar = &fileName
+
+	db.Model(&user).Save(&user)
+
+	var response struct {
+		Avatar string
+	}
+	response.Avatar = fileName
+
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&response)
+}
+
+// isImageMimeType check mimeType string to be an image.
+func isImageMimeType(mimeType string) bool {
+	if strings.EqualFold(mimeType, "image/jpg") || strings.EqualFold(mimeType, "image/jpeg") || strings.EqualFold(mimeType, "image/png") {
+		return true
+	}
+
+	return false
 }

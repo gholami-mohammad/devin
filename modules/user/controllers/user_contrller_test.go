@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -497,4 +499,288 @@ func TestUpdatePassword(t *testing.T) {
 			t.Fatal("Invalid response message")
 		}
 	})
+}
+
+func TestUpdateAvatar(t *testing.T) {
+	_, _, tokenString := getValidUser(1, true)
+	defer deleteTestUser(1)
+
+	route := mux.NewRouter()
+	path := "/user/{id}/update_avatar"
+	route.Handle(path, http.HandlerFunc(UpdateAvatar))
+	route.Use(middlewares.Authenticate)
+
+	t.Run("Authentication faild", func(t *testing.T) {
+		route := mux.NewRouter()
+		path := "/user/{id}/update_avatar"
+		route.Handle(path, http.HandlerFunc(UpdateAvatar))
+		req, e := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+		if res.StatusCode != http.StatusUnauthorized {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Auhtentication failed") {
+			t.Fatal("Invalid response message")
+		}
+
+	})
+
+	t.Run("No userID in route", func(t *testing.T) {
+		route := mux.NewRouter()
+		path := "/user/update_avatar"
+		route.Handle(path, http.HandlerFunc(UpdateAvatar))
+		req, e := http.NewRequest(http.MethodPost, path, nil)
+		req.Header.Add("Authorization", tokenString)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Invalid User ID") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("Bad userID in route, not integer", func(t *testing.T) {
+		route := mux.NewRouter()
+		path := "/user/{id}/pdate_avatar"
+		route.Handle(path, http.HandlerFunc(UpdateAvatar))
+		req, e := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "INVALID", 1), nil)
+		req.Header.Add("Authorization", tokenString)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "integer values accepted") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("User Not Found", func(t *testing.T) {
+		_, _, token2 := getValidUser(2, true)
+		deleteTestUser(2)
+		route := mux.NewRouter()
+		path := "/user/{id}/pdate_avatar"
+		route.Handle(path, http.HandlerFunc(UpdateAvatar))
+		req, e := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "2", 1), nil)
+		req.Header.Add("Authorization", token2)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+		if res.StatusCode != http.StatusUnauthorized {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Auhtentication failed") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("Permission Denied", func(t *testing.T) {
+		_, _, token3 := getValidUser(3, false)
+		defer deleteTestUser(3)
+		route := mux.NewRouter()
+		path := "/user/{id}/pdate_avatar"
+		route.Handle(path, http.HandlerFunc(UpdateAvatar))
+		req, e := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), nil)
+		req.Header.Add("Authorization", token3)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+		if res.StatusCode != http.StatusForbidden {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "not allowed") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("Error Parse Form", func(t *testing.T) {
+
+		req, e := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), nil)
+		req.Header.Add("Authorization", tokenString)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Can't read file") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("Invalid image type", func(t *testing.T) {
+
+		file, e := os.Open("../../../test_files/text_file.txt")
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer file.Close()
+
+		fi, e := file.Stat()
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		fileContent, e := ioutil.ReadAll(file)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		writer := &bytes.Buffer{}
+
+		mw := multipart.NewWriter(writer)
+		part, e := mw.CreateFormFile("AvatarFile", fi.Name())
+		if e != nil {
+			t.Fatal(e)
+		}
+		part.Write(fileContent)
+		mw.WriteField("AvatarFile", fi.Name())
+		req, e := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), writer)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Content-Type", mw.FormDataContentType())
+		req.Header.Add("Authorization", tokenString)
+		mw.Close()
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Invalid image type") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("OK", func(t *testing.T) {
+
+		file, e := os.Open("../../../test_files/golang.png")
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer file.Close()
+
+		fi, e := file.Stat()
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		fileContent, e := ioutil.ReadAll(file)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		writer := &bytes.Buffer{}
+		mw := multipart.NewWriter(writer)
+		part, e := mw.CreateFormFile("AvatarFile", fi.Name())
+		if e != nil {
+			t.Fatal(e)
+		}
+		part.Write(fileContent)
+		mw.WriteField("AvatarFile", fi.Name())
+
+		req, e := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), writer)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Content-Type", mw.FormDataContentType())
+		req.Header.Add("Authorization", tokenString)
+
+		mw.Close()
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+		if res.StatusCode != http.StatusOK {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Avatar") {
+			t.Log(string(bts))
+			t.Fatal("Invalid response message")
+		}
+	})
+
+}
+
+func TestIsImageMimeType(t *testing.T) {
+	testTable := make(map[string]bool, 4)
+	testTable["image/jpeg"] = true
+	testTable["image/jpg"] = true
+	testTable["image/png"] = true
+	testTable["image/other"] = false
+	for k, v := range testTable {
+		if isImageMimeType(k) != v {
+			t.Fail()
+		}
+	}
+}
+
+func TestIsImageFilename(t *testing.T) {
+	filenames := make(map[string]bool, 5)
+	filenames["a.png"] = true
+	filenames["a.jpeg"] = true
+	filenames["a.jpg"] = true
+	filenames["a.pdf"] = false
+	filenames["a.some*"] = false
+	for k, v := range filenames {
+		if isImageFilename(k) != v {
+			t.Fail()
+		}
+	}
 }

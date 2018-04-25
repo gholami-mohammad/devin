@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -478,13 +479,15 @@ func UpdateAvatar(w http.ResponseWriter, r *http.Request) {
 		err.Errors = make(map[string][]string)
 		err.Errors["AvatarFile"] = []string{"Can't read file"}
 		log.Println("Error on updating avatar,", e)
+
 		helpers.NewErrorResponse(w, &err)
 
 		return
 	}
 	defer file.Close()
 	mimeType := fileHeader.Header.Get("Content-Type")
-	if !isImageMimeType(mimeType) {
+
+	if !isImageMimeType(mimeType) && !isImageFilename(fileHeader.Filename) {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusUnprocessableEntity,
 			Message:   "Error on updating avatar.",
@@ -509,6 +512,7 @@ func UpdateAvatar(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+	os.MkdirAll("public", 0755)
 	parts := strings.Split(fileHeader.Filename, ".")
 	fileName := fmt.Sprintf("public/%v%v.%v", helpers.RandomString(10), helpers.RandomString(10), parts[len(parts)-1])
 	e = ioutil.WriteFile(fileName, bts, 0666)
@@ -543,9 +547,20 @@ func UpdateAvatar(w http.ResponseWriter, r *http.Request) {
 
 // isImageMimeType check mimeType string to be an image.
 func isImageMimeType(mimeType string) bool {
+	mimeType = strings.ToLower(mimeType)
 	if strings.EqualFold(mimeType, "image/jpg") || strings.EqualFold(mimeType, "image/jpeg") || strings.EqualFold(mimeType, "image/png") {
 		return true
 	}
 
 	return false
+}
+
+func isImageFilename(filename string) bool {
+	filename = strings.ToLower(filename)
+	is, e := regexp.MatchString(".+\\.(jpg$)|(png$)|(jpeg$)", filename)
+	if e != nil {
+		return false
+	}
+
+	return is
 }

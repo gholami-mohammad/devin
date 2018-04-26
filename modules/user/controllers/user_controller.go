@@ -321,7 +321,7 @@ func ProfileBasicInfo(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	var countries []models.Country
-	db.Find(&countries)
+	db.Preload("Provinces").Preload("Provinces.Cities").Find(&countries)
 	var dateFormats []models.DateFormat
 	db.Find(&dateFormats)
 	var timeFormats []models.TimeFormat

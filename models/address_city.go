@@ -16,3 +16,7 @@ type City struct {
 	UpdatedAt  time.Time
 	DeletedAt  *time.Time
 }
+
+func (City) TableName() string {
+	return "public.address_cities"
+}

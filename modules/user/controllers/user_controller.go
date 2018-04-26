@@ -231,7 +231,7 @@ func Whoami(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	//Loading required data from DB
-	e = db.Where("id=?", authUser.ID).First(&user).Error
+	e = db.Preload("Country").Preload("Province").Preload("City").Where("id=?", authUser.ID).First(&user).Error
 	if e != nil {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusUnauthorized,
@@ -286,7 +286,7 @@ func Whois(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	//Loading required data from DB
-	e = db.Where("id=?", userID).First(&user).Error
+	e = db.Preload("Country").Preload("Province").Preload("City").Where("id=?", userID).First(&user).Error
 	if e != nil {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusUnauthorized,

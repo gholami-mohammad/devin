@@ -31,7 +31,7 @@ func MakeMigration(create *string) {
 	filename := fmt.Sprintf("./database/migrations/%v_%v.go", timestamp, strcase.ToSnake(*create))
 	content := fmt.Sprintf(`package migrations
 
-import "gogit/database"
+import "devin/database"
 
 // Migrate the database to a new version
 func (Migration) Migrate%v() (e error) {

@@ -14,6 +14,7 @@ import (
 	"devin/policies"
 )
 
+// Save process inserting and updating of organizations
 func Save(w http.ResponseWriter, r *http.Request) {
 
 	// Check content type

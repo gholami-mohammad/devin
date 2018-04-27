@@ -85,6 +85,12 @@ func Migrate() {
 		Printer{}.Error("Error on loading migrations directory")
 	}
 
+	var batch struct {
+		LastBatch uint `sql:"last_batch"`
+	}
+	db.Raw(`select max(batch) as last_batch from migrations;`).Scan(&batch)
+	batch.LastBatch++
+
 	for _, v := range files {
 		if v.IsDir() {
 			continue
@@ -132,6 +138,7 @@ func Migrate() {
 
 		// save migrated file to DB
 		mg.Name = filename
+		mg.Batch = batch.LastBatch
 		db.Create(&mg)
 
 		Printer{}.Success(name, " Migrated")

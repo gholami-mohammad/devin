@@ -42,11 +42,3 @@ func CanViewProfile(authenticatedUser models.User, requestedUser models.User) bo
 	}
 	return false
 }
-
-// CanCreateOrganization check permission of authenticatedUser for creating new organization
-func CanCreateOrganization(authenticatedUser models.User, requestedOrganization models.User) bool {
-	if authenticatedUser.ID == *requestedOrganization.OwnerID || authenticatedUser.IsRootUser {
-		return true
-	}
-	return false
-}

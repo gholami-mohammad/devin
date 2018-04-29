@@ -21,7 +21,11 @@ func (Migration) MigrateUserOrganizationInvitations() (e error) {
         CONSTRAINT user_organization_invitations_organization_id_users_id FOREIGN KEY (organization_id)
             REFERENCES public.users (id)
             ON UPDATE CASCADE
+            ON DELETE CASCADE,
+        CONSTRAINT user_organization_invitations_created_by_id_users_id FOREIGN KEY (created_by_id)
+            REFERENCES public.users (id)
             ON DELETE CASCADE
+            ON UPDATE CASCADE
     );`).Error
 
 	return

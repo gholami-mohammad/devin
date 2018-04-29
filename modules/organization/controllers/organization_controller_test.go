@@ -37,6 +37,25 @@ func deleteTestUser(id uint64) {
 	db.Exec(`delete from users where id=?;`, id)
 }
 
+func getValidOrganization(id uint64, ownerID uint64) models.User {
+	db := database.NewGORMInstance()
+	defer db.Close()
+	db.Exec(`delete from users where id=?;`, id)
+	e := db.Exec(`insert into users (id, username, email, user_type, owner_id) values (?, ?, ?, 2, ?)`, id, fmt.Sprintf("org%v", id), fmt.Sprintf("org%v@gmail.com", id), ownerID).Error
+	if e != nil {
+		panic(e.Error())
+	}
+
+	var org models.User
+	db.Where("id=?", id).First(&org)
+
+	return org
+}
+
+func deleteTestOrganization(id uint64) {
+	deleteTestUser(id)
+}
+
 func TestSave(t *testing.T) {
 	_, _, tokenString := getValidUser(1, true)
 	defer deleteTestUser(1)

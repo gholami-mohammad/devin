@@ -20,3 +20,7 @@ type UserOrganization struct {
 	UpdatedAt                time.Time
 	DeletedAt                *time.Time
 }
+
+func (UserOrganization) TableName() string {
+	return "public.user_organization"
+}

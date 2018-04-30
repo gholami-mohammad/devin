@@ -44,3 +44,7 @@ test_crypto:
 test_org:
 	go test -v --coverprofile=cover.out devin/modules/organization/controllers
 	go tool cover --html=cover.out
+
+test_org_invite:
+	go test -v --coverprofile=cover.out devin/modules/organization/controllers -run TestInviteUser
+	go tool cover --html=cover.out

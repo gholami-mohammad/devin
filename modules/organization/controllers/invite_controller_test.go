@@ -168,7 +168,7 @@ func TestInviteUser(t *testing.T) {
 		defer deleteTestUser(2)
 		defer deleteTestOrganization(102)
 
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "102", 1), strings.NewReader("{}"))
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "102", 1), strings.NewReader(`{"Identifier":"mgh2"}`))
 		req.Header.Add("Authorization", tokenString)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()

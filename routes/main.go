@@ -22,7 +22,7 @@ func LoadRoutes(r *mux.Router) *mux.Router {
 	secureArea.HandleFunc("/user/{id:[0-9]+}/update_password", user_ctrl.UpdatePassword).Methods(http.MethodPost)
 	secureArea.HandleFunc("/user/{id:[0-9]+}/organization/save", org_ctrl.Save).Methods(http.MethodPost)
 
-	secureArea.HandleFunc("/organization/{id:[0-9]+}/invite_user", org_ctrl.Save).Methods(http.MethodPost)
+	secureArea.HandleFunc("/organization/{id:[0-9]+}/invite_user", org_ctrl.InviteUser).Methods(http.MethodPost)
 
 	secureArea.HandleFunc("/whoami", user_ctrl.Whoami).Methods(http.MethodGet)
 	secureArea.HandleFunc("/whois/{id:[0-9]+}", user_ctrl.Whois).Methods(http.MethodGet)

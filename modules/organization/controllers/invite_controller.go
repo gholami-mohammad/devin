@@ -102,17 +102,6 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//Check permission of user to invite others
-	if policies.CanInviteUserToOrganization(authUser, organization) == false {
-		err := helpers.ErrorResponse{
-			ErrorCode: http.StatusForbidden,
-			Message:   "This request is not permitted for you.",
-		}
-		helpers.NewErrorResponse(w, &err)
-
-		return
-	}
-
 	// Check email address of null data
 	if strings.EqualFold(reqModel.Identifier, "") {
 		err := helpers.ErrorResponse{
@@ -122,6 +111,17 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		err.Errors = make(map[string][]string)
 		err.Errors["Identifier"] = []string{"Username or email is required"}
 		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	//Check permission of user to invite others
+	if policies.CanInviteUserToOrganization(authUser, organization) == false {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusForbidden,
+			Message:   "This request is not permitted for you.",
+		}
+		helpers.NewErrorResponse(w, &err)
+
 		return
 	}
 

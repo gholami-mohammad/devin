@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,6 +16,8 @@ import (
 )
 
 // InviteUser send invitaion request to given user
+// This method invite already registered users using
+// their username or email
 func InviteUser(w http.ResponseWriter, r *http.Request) {
 	// Check content type
 	if !helpers.HasJSONRequest(r) {
@@ -37,7 +40,7 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ID, e := strconv.ParseUint(orgID, 10, 64)
+	OrganizationID, e := strconv.ParseUint(orgID, 10, 64)
 	if e != nil {
 		err := helpers.ErrorResponse{
 			Message:   "Invalid Organization ID. Just integer values accepted",
@@ -52,7 +55,7 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 
 	var organization models.User
 	//Check DB for existance of organization
-	db.Model(&organization).Where("id=? AND user_type=2", ID).First(&organization)
+	db.Model(&organization).Where("id=? AND user_type=2", OrganizationID).First(&organization)
 	if organization.ID == 0 {
 		err := helpers.ErrorResponse{
 			Message:   "Organization not found",
@@ -73,7 +76,9 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var reqModel models.UserOrganizationInvitation
+	var reqModel struct {
+		Identifier string `doc:"username or email of user"`
+	}
 
 	// Check request boby
 	if r.Body == nil {
@@ -109,30 +114,47 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check email address of null data
-	if reqModel.Email == nil || strings.EqualFold(*reqModel.Email, "") {
+	if strings.EqualFold(reqModel.Identifier, "") {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusUnprocessableEntity,
 			Message:   "Invalid request data",
 		}
 		err.Errors = make(map[string][]string)
-		err.Errors["Email"] = []string{"Invitation's email address can't be empty"}
+		err.Errors["Identifier"] = []string{"Username or email is required"}
 		helpers.NewErrorResponse(w, &err)
 		return
 	}
-	// Check for valid email address
-	if !new(helpers.Validator).IsValidEmailFormat(*reqModel.Email) {
-		err := helpers.ErrorResponse{
-			ErrorCode: http.StatusUnprocessableEntity,
-			Message:   "Invalid request data",
-		}
-		err.Errors = make(map[string][]string)
-		err.Errors["Email"] = []string{"Invalid email address"}
-		helpers.NewErrorResponse(w, &err)
-		return
-	}
-	// Check for invited user registration: already registered or not
-	// Send request email
-	reqModel.OrganizationID = ID
 
-	// Save request data in DB
+	// Check for invited user registration: already registered or not
+	var targetUser models.User
+	db.Model(&targetUser).Where("email=? OR username=?", reqModel.Identifier, reqModel.Identifier).First(&targetUser)
+	if targetUser.ID == 0 {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusNotFound,
+			Message:   "Not found",
+		}
+		err.Errors = make(map[string][]string)
+		err.Errors["Identifier"] = []string{"No user found with this username or email "}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	var invitation models.UserOrganizationInvitation
+	invitation.Email = &targetUser.Email
+	invitation.UserID = &targetUser.ID
+	invitation.OrganizationID = OrganizationID
+	invitation.CreatedByID = authUser.ID
+
+	e = db.Save(&invitation).Error
+	if e != nil {
+		log.Fatalln(e)
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusInternalServerError,
+			Message:   "Fail to save data",
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	helpers.NewSuccessResponse(w, "Invitation sent successfully")
 }

@@ -15,6 +15,10 @@ import (
 func TestInviteUser(t *testing.T) {
 	_, _, tokenString := getValidUser(100, true)
 	defer deleteTestUser(100)
+
+	getValidUser(200, false)
+	defer deleteTestUser(200)
+
 	getValidOrganization(101, 100)
 	defer deleteTestOrganization(101)
 
@@ -182,7 +186,7 @@ func TestInviteUser(t *testing.T) {
 		}
 	})
 
-	t.Run("Empty Email", func(t *testing.T) {
+	t.Run("Empty Identifier", func(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), strings.NewReader(`{}`))
 		req.Header.Add("Authorization", tokenString)
 		req.Header.Add("Content-Type", "application/json")
@@ -196,13 +200,13 @@ func TestInviteUser(t *testing.T) {
 		}
 		defer res.Body.Close()
 		bts, _ := ioutil.ReadAll(res.Body)
-		if !strings.Contains(string(bts), "empty") {
+		if !strings.Contains(string(bts), "Username or email is required") {
 			t.Fatal("Invalid response message")
 		}
 	})
 
-	t.Run("invalid Email", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), strings.NewReader(`{"Email": "mgh"}`))
+	t.Run("invited user not found", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), strings.NewReader(`{"Identifier":"notfound_user"}`))
 		req.Header.Add("Authorization", tokenString)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
@@ -210,18 +214,18 @@ func TestInviteUser(t *testing.T) {
 
 		res := rr.Result()
 
-		if res.StatusCode != http.StatusUnprocessableEntity {
+		if res.StatusCode != http.StatusNotFound {
 			t.Fatal("Status code not matched. Response is", res.StatusCode)
 		}
 		defer res.Body.Close()
 		bts, _ := ioutil.ReadAll(res.Body)
-		if !strings.Contains(string(bts), "Invalid email") {
+		if !strings.Contains(string(bts), "Not found") {
 			t.Fatal("Invalid response message")
 		}
 	})
 
 	t.Run("OK", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), strings.NewReader(`{"Email": "mgh@gmail.com"}`))
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), strings.NewReader(`{"Identifier": "mgh100"}`))
 		req.Header.Add("Authorization", tokenString)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
@@ -233,9 +237,5 @@ func TestInviteUser(t *testing.T) {
 			t.Fatal("Status code not matched. Response is", res.StatusCode)
 		}
 		defer res.Body.Close()
-		// bts, _ := ioutil.ReadAll(res.Body)
-		// if !strings.Contains(string(bts), "Invalid request body") {
-		// 	t.Fatal("Invalid response message")
-		// }
 	})
 }

@@ -75,20 +75,6 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 	helpers.NewSuccessResponse(w, "Invitation sent successfully")
 }
 
-//isJsonRequest check request body for 'application/json' content type
-func isJsonRequest(w http.ResponseWriter, r *http.Request) bool {
-	if !helpers.HasJSONRequest(r) {
-		err := helpers.ErrorResponse{
-			Message:   "Invalid content type.",
-			ErrorCode: http.StatusUnsupportedMediaType,
-		}
-		helpers.NewErrorResponse(w, &err)
-		return false
-	}
-
-	return true
-}
-
 //extractOrganizationID Load organization ID from URL
 func extractOrganizationID(w http.ResponseWriter, r *http.Request) (uint64, error) {
 	orgID, ok := mux.Vars(r)["id"]
@@ -127,37 +113,6 @@ func fetchOrganizationFromDB(w http.ResponseWriter, db *gorm.DB, organizationID 
 		return
 	}
 	return
-}
-
-// getAuthenticatedUser get user who is now logged into the application
-func getAuthenticatedUser(w http.ResponseWriter, r *http.Request) (authUser models.User, e error) {
-	authUser, _, e = models.User{}.ExtractUserFromRequestContext(r)
-	if e != nil {
-		err := helpers.ErrorResponse{
-			ErrorCode: http.StatusUnauthorized,
-			Message:   "Auhtentication failed.",
-		}
-		helpers.NewErrorResponse(w, &err)
-
-		return
-	}
-
-	return
-}
-
-// isRequestBodyNil check request body to being not nil
-func isRequestBodyNil(w http.ResponseWriter, r *http.Request) bool {
-	// Check request boby
-	if r.Body == nil {
-		err := helpers.ErrorResponse{
-			ErrorCode: http.StatusInternalServerError,
-			Message:   "Request body cant be empty",
-		}
-		helpers.NewErrorResponse(w, &err)
-		return true
-	}
-
-	return false
 }
 
 //decodeInviteRequestBody decode request body as invitationReqModel

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
 
 	"devin/database"
 	"devin/helpers"
@@ -17,25 +18,95 @@ import (
 // Save process inserting and updating of organizations
 func Save(w http.ResponseWriter, r *http.Request) {
 
-	// Check content type
+	if isJsonRequest(w, r) == false {
+		return
+	}
+
+	if isRequestBodyNil(w, r) == true {
+		return
+	}
+
+	ownerID, e := extractOwnerID(w, r)
+	if e != nil {
+		return
+	}
+
+	authUser, e := getAuthenticatedUser(w, r)
+	if e != nil {
+		return
+	}
+
+	reqModel, e := decodeOrganizationRequestModel(w, r)
+
+	reqModel.OwnerID = &ownerID
+	reqModel.FirstName = reqModel.FullName
+	reqModel.Username = strings.ToLower(reqModel.Username)
+	reqModel.Email = strings.ToLower(reqModel.Email)
+	reqModel.UserType = 2 //2 for organizations
+
+	if canCreateOrganization(w, authUser, reqModel) == false {
+		return
+	}
+
+	if isOrganizationUsernameValid(w, reqModel) == false {
+		return
+	}
+
+	if isOrganizationEmailValid(w, reqModel) == false {
+		return
+	}
+
+	db := database.NewGORMInstance()
+	defer db.Close()
+
+	if isUniqueEmail(w, db, reqModel) == false {
+		return
+	}
+
+	if isUniqueUsername(w, db, reqModel) == false {
+		return
+	}
+
+	reqModel, e = saveOrganization(w, db, reqModel)
+	if e != nil {
+		return
+	}
+
+	json.NewEncoder(w).Encode(&reqModel)
+	return
+}
+
+//isJsonRequest check request body for 'application/json' content type
+func isJsonRequest(w http.ResponseWriter, r *http.Request) bool {
 	if !helpers.HasJSONRequest(r) {
 		err := helpers.ErrorResponse{
 			Message:   "Invalid content type.",
 			ErrorCode: http.StatusUnsupportedMediaType,
 		}
 		helpers.NewErrorResponse(w, &err)
-		return
+		return false
 	}
 
+	return true
+}
+
+// isRequestBodyNil check request body to being not nil
+func isRequestBodyNil(w http.ResponseWriter, r *http.Request) bool {
+	// Check request boby
 	if r.Body == nil {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusInternalServerError,
 			Message:   "Request body cant be empty",
 		}
 		helpers.NewErrorResponse(w, &err)
-		return
+		return true
 	}
 
+	return false
+}
+
+//extractOwnerID get ID variable form request URL
+func extractOwnerID(w http.ResponseWriter, r *http.Request) (ownerID uint64, e error) {
 	userID, ok := mux.Vars(r)["id"]
 	if !ok {
 		err := helpers.ErrorResponse{
@@ -46,7 +117,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ownerID, e := strconv.ParseUint(userID, 10, 64)
+	ownerID, e = strconv.ParseUint(userID, 10, 64)
 	if e != nil {
 		err := helpers.ErrorResponse{
 			Message:   "Invalid User ID. Just integer values accepted",
@@ -56,16 +127,27 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authUser, _, e := models.User{}.ExtractUserFromRequestContext(r)
+	return ownerID, nil
+}
+
+// getAuthenticatedUser get user who is now logged into the application
+func getAuthenticatedUser(w http.ResponseWriter, r *http.Request) (authUser models.User, e error) {
+	authUser, _, e = models.User{}.ExtractUserFromRequestContext(r)
 	if e != nil {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusUnauthorized,
 			Message:   "Auhtentication failed.",
 		}
 		helpers.NewErrorResponse(w, &err)
+
 		return
 	}
-	var reqModel models.User
+
+	return
+}
+
+// decodeOrganizationRequestModel decode request body to object of models.User
+func decodeOrganizationRequestModel(w http.ResponseWriter, r *http.Request) (reqModel models.User, e error) {
 
 	e = json.NewDecoder(r.Body).Decode(&reqModel)
 	if e != nil {
@@ -78,21 +160,25 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reqModel.OwnerID = &ownerID
-	reqModel.FirstName = reqModel.FullName
-	reqModel.Username = strings.ToLower(reqModel.Username)
-	reqModel.Email = strings.ToLower(reqModel.Email)
-	reqModel.UserType = 2 //2 for organizations
+	return
+}
 
+// canCreateOrganization check permission of user to create new organization.
+func canCreateOrganization(w http.ResponseWriter, authUser, reqModel models.User) bool {
 	if !policies.CanCreateOrganization(authUser, reqModel) {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusForbidden,
 			Message:   "This action is not allowed for you.",
 		}
 		helpers.NewErrorResponse(w, &err)
-		return
+		return false
 	}
 
+	return true
+}
+
+// isOrganizationUsernameValid check validations of username
+func isOrganizationUsernameValid(w http.ResponseWriter, reqModel models.User) bool {
 	// username validator
 	isValidUsername := helpers.Validator{}.IsValidUsernameFormat(reqModel.Username)
 	if isValidUsername == false {
@@ -105,9 +191,14 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		err.Errors["Username"] = []string{"Invalid username"}
 		helpers.NewErrorResponse(w, &err)
 
-		return
+		return false
 	}
 
+	return true
+}
+
+// isOrganizationEmailValid check validation of email
+func isOrganizationEmailValid(w http.ResponseWriter, reqModel models.User) bool {
 	// email validator
 	isValidEmail := helpers.Validator{}.IsValidEmailFormat(reqModel.Email)
 	if isValidEmail == false {
@@ -120,12 +211,13 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		err.Errors["Email"] = []string{"Invalid email address"}
 		helpers.NewErrorResponse(w, &err)
 
-		return
+		return false
 	}
+	return true
+}
 
-	db := database.NewGORMInstance()
-	defer db.Close()
-
+//isUniqueEmail check uniqueness of organization's email
+func isUniqueEmail(w http.ResponseWriter, db *gorm.DB, reqModel models.User) bool {
 	// Check for duplication of email
 	is, _ := reqModel.IsUniqueValue(db, "email", reqModel.Email, reqModel.ID)
 	if is == false {
@@ -138,11 +230,18 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		err.Errors["Email"] = []string{"This email is already registered."}
 
 		helpers.NewErrorResponse(w, &err)
-		return
+		return false
 
 	}
+
+	return true
+}
+
+//isUniqueUsername check uniqueness of organization's username
+func isUniqueUsername(w http.ResponseWriter, db *gorm.DB, reqModel models.User) bool {
+
 	// Check for duplication of username
-	is, _ = reqModel.IsUniqueValue(db, "username", reqModel.Username, reqModel.ID)
+	is, _ := reqModel.IsUniqueValue(db, "username", reqModel.Username, reqModel.ID)
 	if is == false {
 		err := helpers.ErrorResponse{
 			Message:   "Invalid username.",
@@ -152,10 +251,15 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		err.Errors["Username"] = []string{"This username is already registered."}
 
 		helpers.NewErrorResponse(w, &err)
-		return
 
+		return false
 	}
 
+	return true
+}
+
+// saveOrganization save final data to the DB
+func saveOrganization(w http.ResponseWriter, db *gorm.DB, reqModel models.User) (org models.User, e error) {
 	e = db.Model(&reqModel).Save(&reqModel).Error
 	if e != nil {
 		err := helpers.ErrorResponse{
@@ -166,6 +270,5 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(&reqModel)
-	return
+	return reqModel, nil
 }

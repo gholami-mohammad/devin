@@ -46,5 +46,5 @@ test_org:
 	go tool cover --html=cover.out
 
 test_org_invite:
-	go test -v --coverprofile=cover.out devin/modules/organization/controllers -run TestInviteUser
+	go test -v --coverprofile=cover.out -cpuprofile=cpu.out devin/modules/organization/controllers -run TestInviteUser
 	go tool cover --html=cover.out

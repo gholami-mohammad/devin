@@ -1,7 +1,10 @@
 devin
-cover.out
 cmd/cmd
 crypto/keys
 public
 debug.test
 debug
+
+cover.out
+cpu.out
+*.test

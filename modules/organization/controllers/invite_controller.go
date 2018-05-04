@@ -68,6 +68,10 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if isUserMemberOfOrganization(w, db, OrganizationID, targetUser.ID) == true {
+		return
+	}
+
 	if saveInvitation(w, db, targetUser, OrganizationID, authUser.ID) != nil {
 		return
 	}
@@ -183,6 +187,28 @@ func isTargetUserRegistered(w http.ResponseWriter, db *gorm.DB, reqModel invitat
 	}
 	registered = true
 	return
+}
+
+//isUserMemberOfOrganization check the invited user membership status,
+//If user is a memeber of given organization,
+//This method will return true
+func isUserMemberOfOrganization(w http.ResponseWriter, db *gorm.DB, organiztionID uint64, targetUserID uint64) bool {
+
+	var count uint
+	db.Model(&models.UserOrganization{}).Where("user_id=? AND organization_id=?", targetUserID, organiztionID).Count(&count)
+
+	if count > 0 {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnprocessableEntity,
+			Message:   "User exists",
+		}
+		err.Errors = make(map[string][]string)
+		err.Errors["Identifier"] = []string{"A user with the given email/username already added to this organization"}
+		helpers.NewErrorResponse(w, &err)
+		return true
+	}
+
+	return false
 }
 
 // saveInvitation save final data of invitation into the DB.

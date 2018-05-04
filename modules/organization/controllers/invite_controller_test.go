@@ -9,7 +9,9 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"devin/database"
 	"devin/middlewares"
+	"devin/models"
 )
 
 func TestInviteUser(t *testing.T) {
@@ -220,6 +222,42 @@ func TestInviteUser(t *testing.T) {
 		defer res.Body.Close()
 		bts, _ := ioutil.ReadAll(res.Body)
 		if !strings.Contains(string(bts), "Not found") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("User is member of organization", func(t *testing.T) {
+		var userID uint64 = 78
+		var orgID uint64 = 79
+		_, _, ts := getValidUser(userID, true)
+		getValidOrganization(orgID, userID)
+		// defer deleteTestUser(78)
+		// defer deleteTestOrganization(79)
+
+		obj := models.UserOrganization{}
+		obj.CreatedByID = userID
+		obj.OrganizationID = &orgID
+		obj.UserID = &userID
+		obj.IsAdminOfOrganization = true
+		db := database.NewGORMInstance()
+		defer db.Close()
+
+		db.Create(&obj)
+
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "79", 1), strings.NewReader(`{"Identifier": "mgh78"}`))
+		req.Header.Add("Authorization", ts)
+		req.Header.Add("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "User exists") {
 			t.Fatal("Invalid response message")
 		}
 	})

@@ -30,7 +30,8 @@ func (Migration) MigrateUserOrganizationTable() (e error) {
     CONSTRAINT user_organization_created_by_id_users_id FOREIGN KEY (created_by_id)
         REFERENCES public.users (id)
         ON DELETE CASCADE
-        ON UPDATE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT user_id_organization_id_unique UNIQUE (user_id, organization_id)
     )`).Error
 
 	return

@@ -231,8 +231,8 @@ func TestInviteUser(t *testing.T) {
 		var orgID uint64 = 79
 		_, _, ts := getValidUser(userID, true)
 		getValidOrganization(orgID, userID)
-		// defer deleteTestUser(78)
-		// defer deleteTestOrganization(79)
+		defer deleteTestUser(userID)
+		defer deleteTestOrganization(orgID)
 
 		obj := models.UserOrganization{}
 		obj.CreatedByID = userID
@@ -258,22 +258,61 @@ func TestInviteUser(t *testing.T) {
 		defer res.Body.Close()
 		bts, _ := ioutil.ReadAll(res.Body)
 		if !strings.Contains(string(bts), "User exists") {
-			t.Fatal("Invalid response message")
+			t.Fatal("Invalid response message", string(bts))
 		}
 	})
 
-	t.Run("OK", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), strings.NewReader(`{"Identifier": "mgh100"}`))
-		req.Header.Add("Authorization", tokenString)
+	t.Run("User already invited", func(t *testing.T) {
+		var userID uint64 = 80
+		var orgID uint64 = 81
+		_, _, ts := getValidUser(userID, true)
+		getValidOrganization(orgID, userID)
+		defer deleteTestUser(userID)
+		defer deleteTestOrganization(orgID)
+
+		obj := models.UserOrganizationInvitation{}
+		obj.CreatedByID = userID
+		obj.OrganizationID = orgID
+		obj.UserID = &userID
+		db := database.NewGORMInstance()
+		defer db.Close()
+
+		db.Create(&obj)
+
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "81", 1), strings.NewReader(`{"Identifier": "mgh80"}`))
+		req.Header.Add("Authorization", ts)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
 		route.ServeHTTP(rr, req)
 
 		res := rr.Result()
 
-		if res.StatusCode != http.StatusOK {
+		if res.StatusCode != http.StatusUnprocessableEntity {
 			t.Fatal("Status code not matched. Response is", res.StatusCode)
 		}
 		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "User already invited") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("OK", func(t *testing.T) {
+		_, _, ts := getValidUser(66, true)
+		getValidOrganization(67, 66)
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "67", 1), strings.NewReader(`{"Identifier": "mgh66"}`))
+		req.Header.Add("Authorization", ts)
+		req.Header.Add("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+
+		defer res.Body.Close()
+		if res.StatusCode != http.StatusOK {
+			bts, _ := ioutil.ReadAll(res.Body)
+			t.Log(string(bts))
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
 	})
 }

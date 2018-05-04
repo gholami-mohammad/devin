@@ -72,6 +72,10 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if alreadyInvited(w, db, OrganizationID, authUser.ID) == true {
+		return
+	}
+
 	if saveInvitation(w, db, targetUser, OrganizationID, authUser.ID) != nil {
 		return
 	}
@@ -204,6 +208,25 @@ func isUserMemberOfOrganization(w http.ResponseWriter, db *gorm.DB, organiztionI
 		}
 		err.Errors = make(map[string][]string)
 		err.Errors["Identifier"] = []string{"A user with the given email/username already added to this organization"}
+		helpers.NewErrorResponse(w, &err)
+		return true
+	}
+
+	return false
+}
+
+// alreadyInvited check for previous invitations of user for the given organization
+func alreadyInvited(w http.ResponseWriter, db *gorm.DB, organiztionID uint64, targetUserID uint64) bool {
+	var cnt uint
+	db.Model(&models.UserOrganizationInvitation{}).Where("user_id=? AND organization_id=?", targetUserID, organiztionID).Count(&cnt)
+
+	if cnt > 0 {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusUnprocessableEntity,
+			Message:   "User already invited",
+		}
+		err.Errors = make(map[string][]string)
+		err.Errors["Identifier"] = []string{"A user with the given email/username already invited to this organization"}
 		helpers.NewErrorResponse(w, &err)
 		return true
 	}

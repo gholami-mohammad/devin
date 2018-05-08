@@ -56,6 +56,15 @@ func deleteTestOrganization(id uint64) {
 	deleteTestUser(id)
 }
 
+func addUserToOrganization(userID, orgID uint64) {
+	db := database.NewGORMInstance()
+	defer db.Close()
+	e := db.Exec(`insert into user_organization (user_id, organization_id, created_by_id) values (?, ?, ?)`, userID, orgID, userID).Error
+	if e != nil {
+		panic(e)
+	}
+}
+
 func TestSave(t *testing.T) {
 	_, _, tokenString := getValidUser(1, true)
 	defer deleteTestUser(1)
@@ -302,4 +311,140 @@ func TestSave(t *testing.T) {
 		json.Unmarshal(bts, &user)
 		deleteTestUser(user.ID)
 	})
+}
+
+func TestUserOrganizationsIndex(t *testing.T) {
+	_, _, tokenString := getValidUser(200, true)
+	defer deleteTestUser(200)
+	_, _, tokenString300 := getValidUser(300, true)
+	defer deleteTestUser(300)
+
+	getValidOrganization(201, 200)
+	defer deleteTestOrganization(201)
+
+	getValidOrganization(301, 300)
+	defer deleteTestOrganization(300)
+
+	addUserToOrganization(200, 301)
+
+	t.Run("Bad URL UserID", func(t *testing.T) {
+		path := "/api/user/organizations"
+		route := mux.NewRouter()
+		route.Use(middlewares.Authenticate)
+		route.HandleFunc(path, UserOrganizationsIndex)
+
+		req, _ := http.NewRequest(http.MethodGet, path, nil)
+		req.Header.Add("Authorization", tokenString)
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Invalid User ID") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("Bad URL UserID", func(t *testing.T) {
+		path := "/api/user/{id}/organizations"
+		route := mux.NewRouter()
+		route.HandleFunc(path, UserOrganizationsIndex)
+
+		req, _ := http.NewRequest(http.MethodGet, strings.Replace(path, "{id}", "200", 1), nil)
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		if res.StatusCode != http.StatusUnauthorized {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Auhtentication failed") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("OK", func(t *testing.T) {
+		path := "/api/user/{id}/organizations"
+		route := mux.NewRouter()
+		route.Use(middlewares.Authenticate)
+		route.HandleFunc(path, UserOrganizationsIndex)
+
+		req, _ := http.NewRequest(http.MethodGet, strings.Replace(path, "{id}", "200", 1), nil)
+		req.Header.Add("Authorization", tokenString300)
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		if res.StatusCode != http.StatusForbidden {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+	})
+
+	t.Run("OK", func(t *testing.T) {
+		path := "/api/user/{id}/organizations"
+		route := mux.NewRouter()
+		route.Use(middlewares.Authenticate)
+		route.HandleFunc(path, UserOrganizationsIndex)
+
+		req, _ := http.NewRequest(http.MethodGet, strings.Replace(path, "{id}", "200", 1), nil)
+		req.Header.Add("Authorization", tokenString)
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		if res.StatusCode != http.StatusOK {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+	})
+}
+
+func TestCanViewOrganizationsOfUser(t *testing.T) {
+	type testItem struct {
+		AuthUserID      uint64
+		IsRoot          bool
+		UserID          uint64
+		RequestedResult bool
+	}
+	var testTable []testItem
+	testTable = append(testTable, testItem{
+		AuthUserID:      10,
+		IsRoot:          false,
+		UserID:          10,
+		RequestedResult: true,
+	})
+	testTable = append(testTable, testItem{
+		AuthUserID:      11,
+		IsRoot:          false,
+		UserID:          12,
+		RequestedResult: false,
+	})
+	testTable = append(testTable, testItem{
+		AuthUserID:      13,
+		IsRoot:          true,
+		UserID:          13,
+		RequestedResult: true,
+	})
+	testTable = append(testTable, testItem{
+		AuthUserID:      14,
+		IsRoot:          true,
+		UserID:          15,
+		RequestedResult: true,
+	})
+	for _, x := range testTable {
+		authUser, _, _ := getValidUser(x.AuthUserID, x.IsRoot)
+		defer deleteTestUser(x.AuthUserID)
+		result := canViewOrganizationsOfUser(httptest.NewRecorder(), authUser, x.UserID)
+		if result != x.RequestedResult {
+			t.Fatal(x)
+		}
+	}
 }

@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,6 +17,39 @@ import (
 	"devin/policies"
 )
 
+func init() {
+	log.SetFlags(log.Lshortfile)
+}
+
+//UserOrganizationsIndex return a list of organizations that the given user is a member of that.
+func UserOrganizationsIndex(w http.ResponseWriter, r *http.Request) {
+	//we will load organizations of this user
+	userID, e := extractIDFromURL(w, r)
+	if e != nil {
+		return
+	}
+
+	authUser, e := getAuthenticatedUser(w, r)
+	if e != nil {
+		return
+	}
+
+	if canViewOrganizationsOfUser(w, authUser, userID) == false {
+		return
+	}
+
+	db := database.NewGORMInstance()
+	defer db.Close()
+
+	orgs, e := loadOrganizationsByUserID(w, db, userID)
+	if e != nil {
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&orgs)
+}
+
 // Save process inserting and updating of organizations
 func Save(w http.ResponseWriter, r *http.Request) {
 
@@ -26,7 +61,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ownerID, e := extractOwnerID(w, r)
+	ownerID, e := extractIDFromURL(w, r)
 	if e != nil {
 		return
 	}
@@ -105,19 +140,20 @@ func isRequestBodyNil(w http.ResponseWriter, r *http.Request) bool {
 	return false
 }
 
-//extractOwnerID get ID variable form request URL
-func extractOwnerID(w http.ResponseWriter, r *http.Request) (ownerID uint64, e error) {
+//extractIDFromURL get ID variable form request URL
+func extractIDFromURL(w http.ResponseWriter, r *http.Request) (ID uint64, e error) {
 	userID, ok := mux.Vars(r)["id"]
-	if !ok {
+	if ok == false {
 		err := helpers.ErrorResponse{
 			Message:   "Invalid User ID.",
 			ErrorCode: http.StatusUnprocessableEntity,
 		}
 		helpers.NewErrorResponse(w, &err)
+		e = errors.New(err.Message)
 		return
 	}
 
-	ownerID, e = strconv.ParseUint(userID, 10, 64)
+	ID, e = strconv.ParseUint(userID, 10, 64)
 	if e != nil {
 		err := helpers.ErrorResponse{
 			Message:   "Invalid User ID. Just integer values accepted",
@@ -127,7 +163,7 @@ func extractOwnerID(w http.ResponseWriter, r *http.Request) (ownerID uint64, e e
 		return
 	}
 
-	return ownerID, nil
+	return ID, nil
 }
 
 // getAuthenticatedUser get user who is now logged into the application
@@ -166,6 +202,19 @@ func decodeOrganizationRequestModel(w http.ResponseWriter, r *http.Request) (req
 // canCreateOrganization check permission of user to create new organization.
 func canCreateOrganization(w http.ResponseWriter, authUser, reqModel models.User) bool {
 	if !policies.CanCreateOrganization(authUser, reqModel) {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusForbidden,
+			Message:   "This action is not allowed for you.",
+		}
+		helpers.NewErrorResponse(w, &err)
+		return false
+	}
+
+	return true
+}
+
+func canViewOrganizationsOfUser(w http.ResponseWriter, authUser models.User, userID uint64) bool {
+	if !policies.CanViewOrganizationsOfUser(authUser, userID) {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusForbidden,
 			Message:   "This action is not allowed for you.",
@@ -271,4 +320,26 @@ func saveOrganization(w http.ResponseWriter, db *gorm.DB, reqModel models.User) 
 	}
 
 	return reqModel, nil
+}
+
+func loadOrganizationsByUserID(w http.ResponseWriter, db *gorm.DB, userID uint64) (orgs []models.User, e error) {
+	e = db.
+		Preload("UserOrganizationMapping").
+		Model(&orgs).
+		Where(`user_type=2`).
+		Where("owner_id=? OR id IN (?)", userID, db.Table(models.UserOrganization{}.TableName()).
+			Select("organization_id").
+			Where("user_id=?", userID).
+			QueryExpr()).
+		Find(&orgs).Error
+	if e != nil {
+		err := helpers.ErrorResponse{
+			Message:   "Fail to load organizations data",
+			ErrorCode: http.StatusInternalServerError,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	return
 }

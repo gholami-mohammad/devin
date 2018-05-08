@@ -34,3 +34,12 @@ func CanInviteUserToOrganization(authenticatedUser models.User, requestedOrganiz
 
 	return false
 }
+
+//CanViewOrganizationsOfUser check permission of authenticatedUser to access organizations list of userID
+func CanViewOrganizationsOfUser(authenticatedUser models.User, userID uint64) bool {
+	if authenticatedUser.ID == userID || authenticatedUser.IsRootUser == true {
+		return true
+	}
+
+	return false
+}

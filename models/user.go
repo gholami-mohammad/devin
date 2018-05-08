@@ -82,6 +82,10 @@ type PublicProfile struct {
 	Website                  *string         `doc:"Personnal website URL"`
 }
 
+func (User) TableName() string {
+	return "public.users"
+}
+
 // SetEncryptedPassword set new bcrypt password
 func (user *User) SetEncryptedPassword(plainPassword string) {
 	bts, _ := bcrypt.GenerateFromPassword([]byte(plainPassword), bcrypt.DefaultCost)

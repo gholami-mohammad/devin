@@ -324,7 +324,17 @@ func saveOrganization(w http.ResponseWriter, db *gorm.DB, reqModel models.User) 
 
 func loadOrganizationsByUserID(w http.ResponseWriter, db *gorm.DB, userID uint64) (orgs []models.User, e error) {
 	e = db.
-		Preload("UserOrganizationMapping").
+		Preload("Owner").
+		Preload("OrganizationUserMapping").
+		Preload("LocalizationLanguage").
+		Preload("CalendarSystem").
+		Preload("OfficePhoneCountryCode").
+		Preload("HomePhoneCountryCode").
+		Preload("CellPhoneCountryCode").
+		Preload("FaxCountryCode").
+		Preload("Country").
+		Preload("Province").
+		Preload("City").
 		Model(&orgs).
 		Where(`user_type=2`).
 		Where("owner_id=? OR id IN (?)", userID, db.Table(models.UserOrganization{}.TableName()).

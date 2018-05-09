@@ -286,7 +286,15 @@ func Whois(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	//Loading required data from DB
-	e = db.Preload("Country").Preload("Province").Preload("City").Where("id=?", userID).First(&user).Error
+	e = db.
+		Preload("UserOrganizationMapping").
+		Preload("OrganizationUserMapping").
+		Preload("Country").
+		Preload("Province").
+		Preload("City").
+		Where("id=?", userID).
+		First(&user).
+		Error
 	if e != nil {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusUnauthorized,

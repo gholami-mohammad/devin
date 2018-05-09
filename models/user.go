@@ -31,7 +31,8 @@ type User struct {
 	Password                string              `json:"-"`
 	PlainPassword           string              `json:"Password" sql:"-"`
 	UserType                uint                `json:"-" doc:"1: authenticatable user, 2: organization"`
-	UserOrganizationMapping []*UserOrganization `doc:"نگاشت کاربران عضو در هر کمپانی"`
+	UserOrganizationMapping []*UserOrganization `gorm:"ForeignKey:UserID" doc:"Handle preload from a user object"`
+	OrganizationUserMapping []*UserOrganization `gorm:"ForeignKey:OrganizationID" doc:"Handle preload from an organization object"`
 	OwnerID                 *uint64             `doc:"کد یکتای مالک و سازنده ی یک کمپانی. این فیلد برای حساب کاربری افراد میتواند خالی باشد."`
 	Owner                   *User               ``
 	EmailVerified           bool                ``
@@ -55,7 +56,7 @@ type PublicProfile struct {
 	DateFormat               *string         `doc:"Default date formate to show dates in UI. List of date formates stored in 'date_formats' table, but for more DB performance, directly saved here."`
 	TimeFormat               *string         `doc:"Default time format to show in UI. Time formats stored in 'time_formats' table, but for more DB performance, directly saved here."`
 	CalendarSystemID         *uint           `doc:"FK to calendar_systems"`
-	CalendarSystem           *CalendarSystem `sql:"-" doc:"Which calendar system will used to use in datepicker and showing dates "`
+	CalendarSystem           *CalendarSystem `doc:"Which calendar system will used to use in datepicker and showing dates "`
 	OfficePhoneCountryCodeID *uint           `doc:"FK to countries table"`
 	OfficePhoneCountryCode   *Country        `doc:"Belogs to Country"`
 	OfficePhoneNumber        *string         ``

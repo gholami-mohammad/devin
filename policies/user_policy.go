@@ -35,8 +35,16 @@ func CanViewProfile(authenticatedUser models.User, requestedUser models.User) bo
 		}
 		return false
 	case 2:
+
 		if authenticatedUser.ID == *requestedUser.OwnerID || authenticatedUser.IsRootUser {
 			return true
+		}
+
+		for _, v := range requestedUser.OrganizationUserMapping {
+
+			if *v.OrganizationID == requestedUser.ID && *v.UserID == authenticatedUser.ID && v.IsAdminOfOrganization == true {
+				return true
+			}
 		}
 		return false
 	}

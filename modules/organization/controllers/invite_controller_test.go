@@ -300,6 +300,8 @@ func TestInviteUser(t *testing.T) {
 	t.Run("OK", func(t *testing.T) {
 		_, _, ts := getValidUser(66, true)
 		getValidOrganization(67, 66)
+		defer deleteTestUser(66)
+		defer deleteTestOrganization(67)
 		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "67", 1), strings.NewReader(`{"Identifier": "mgh66"}`))
 		req.Header.Add("Authorization", ts)
 		req.Header.Add("Content-Type", "application/json")

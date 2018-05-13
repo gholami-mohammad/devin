@@ -2,6 +2,9 @@ package database
 
 import (
 	// "github.com/go-pg/pg"
+	"ems_ms/database"
+	"fmt"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	// _ "github.com/lib/pq"
@@ -26,4 +29,10 @@ func NewGORMInstance() *gorm.DB {
 	}
 
 	return con
+}
+
+func AddSeqID(tableName string) {
+	db := database.NewInstance()
+	defer db.Close()
+	db.Exec(fmt.Sprintf("SELECT setval('%v_id_seq', max(id)) FROM %v;", tableName, tableName))
 }

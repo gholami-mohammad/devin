@@ -15,6 +15,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"devin/crypto"
+	"devin/database"
 	"devin/helpers"
 )
 
@@ -163,10 +164,14 @@ func (user User) ExtractUserFromRequestContext(r *http.Request) (User, *Claim, e
 	if e != nil {
 		return User{}, nil, e
 	}
-	var u User
+	var u, dbUser User
 	json.Unmarshal([]byte(jsonString), &u)
 
-	return u, clm, nil
+	db := database.NewGORMInstance()
+	defer db.Close()
+	e = db.Where("id=?", u.ID).First(&dbUser).Error
+
+	return dbUser, clm, nil
 }
 
 func (user User) ExtractUserFromClaimPayload(payload string) (User, error) {

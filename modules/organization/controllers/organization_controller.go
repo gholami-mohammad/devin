@@ -14,6 +14,7 @@ import (
 	"devin/database"
 	"devin/helpers"
 	"devin/models"
+	"devin/modules/organization/repository"
 	"devin/policies"
 )
 
@@ -23,26 +24,42 @@ func init() {
 
 //UserOrganizationsIndex return a list of organizations that the given user is a member of that.
 func UserOrganizationsIndex(w http.ResponseWriter, r *http.Request) {
-	//we will load organizations of this user
-	userID, e := extractIDFromURL(w, r)
-	if e != nil {
-		return
-	}
 
 	authUser, e := getAuthenticatedUser(w, r)
 	if e != nil {
 		return
 	}
 
-	if canViewOrganizationsOfUser(w, authUser, userID) == false {
-		return
+	var searchObject repository.OrganizationSearchable
+	json.Unmarshal([]byte(r.URL.Query().Get("filters")), &searchObject)
+	if authUser.IsRootUser == false {
+
+		if searchObject.UserID == nil || *searchObject.UserID == 0 {
+			err := helpers.ErrorResponse{
+				Message:   "Invalid User ID.",
+				ErrorCode: http.StatusUnprocessableEntity,
+			}
+			helpers.NewErrorResponse(w, &err)
+			e = errors.New(err.Message)
+			return
+		}
+
+		if canViewOrganizationsOfUser(w, authUser, *searchObject.UserID) == false {
+			return
+		}
 	}
 
 	db := database.NewGORMInstance()
 	defer db.Close()
 
-	orgs, e := loadOrganizationsByUserID(w, db, userID)
+	orgs, e := repository.LoadOrganizationsFilter(db, searchObject)
+
 	if e != nil {
+		err := helpers.ErrorResponse{
+			Message:   "Fail to load organizations data",
+			ErrorCode: http.StatusInternalServerError,
+		}
+		helpers.NewErrorResponse(w, &err)
 		return
 	}
 
@@ -320,36 +337,4 @@ func saveOrganization(w http.ResponseWriter, db *gorm.DB, reqModel models.User) 
 	}
 
 	return reqModel, nil
-}
-
-func loadOrganizationsByUserID(w http.ResponseWriter, db *gorm.DB, userID uint64) (orgs []models.User, e error) {
-	e = db.
-		Preload("Owner").
-		Preload("OrganizationUserMapping").
-		Preload("LocalizationLanguage").
-		Preload("CalendarSystem").
-		Preload("OfficePhoneCountryCode").
-		Preload("HomePhoneCountryCode").
-		Preload("CellPhoneCountryCode").
-		Preload("FaxCountryCode").
-		Preload("Country").
-		Preload("Province").
-		Preload("City").
-		Model(&orgs).
-		Where(`user_type=2`).
-		Where("owner_id=? OR id IN (?)", userID, db.Table(models.UserOrganization{}.TableName()).
-			Select("organization_id").
-			Where("user_id=?", userID).
-			QueryExpr()).
-		Find(&orgs).Error
-	if e != nil {
-		err := helpers.ErrorResponse{
-			Message:   "Fail to load organizations data",
-			ErrorCode: http.StatusInternalServerError,
-		}
-		helpers.NewErrorResponse(w, &err)
-		return
-	}
-
-	return
 }

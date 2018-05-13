@@ -314,49 +314,14 @@ func TestSave(t *testing.T) {
 }
 
 func TestUserOrganizationsIndex(t *testing.T) {
-	_, _, tokenString := getValidUser(200, true)
-	defer deleteTestUser(200)
-	_, _, tokenString300 := getValidUser(300, true)
-	defer deleteTestUser(300)
+	path := "/api/user/organizations"
 
-	getValidOrganization(201, 200)
-	defer deleteTestOrganization(201)
-
-	getValidOrganization(301, 300)
-	defer deleteTestOrganization(300)
-
-	addUserToOrganization(200, 301)
-
-	t.Run("Bad URL UserID", func(t *testing.T) {
-		path := "/api/user/organizations"
-		route := mux.NewRouter()
-		route.Use(middlewares.Authenticate)
-		route.HandleFunc(path, UserOrganizationsIndex)
-
-		req, _ := http.NewRequest(http.MethodGet, path, nil)
-		req.Header.Add("Authorization", tokenString)
-		rr := httptest.NewRecorder()
-		route.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		if res.StatusCode != http.StatusUnprocessableEntity {
-			t.Fatal("Status code not matched. Response is", res.StatusCode)
-		}
-
-		defer res.Body.Close()
-		bts, _ := ioutil.ReadAll(res.Body)
-		if !strings.Contains(string(bts), "Invalid User ID") {
-			t.Fatal("Invalid response message")
-		}
-	})
-
-	t.Run("Bad URL UserID", func(t *testing.T) {
-		path := "/api/user/{id}/organizations"
+	t.Run("Authentication Failed", func(t *testing.T) {
 		route := mux.NewRouter()
 		route.HandleFunc(path, UserOrganizationsIndex)
 
-		req, _ := http.NewRequest(http.MethodGet, strings.Replace(path, "{id}", "200", 1), nil)
-
+		req, _ := http.NewRequest(http.MethodPost, path, strings.NewReader(`{}`))
+		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
 		route.ServeHTTP(rr, req)
 
@@ -364,7 +329,6 @@ func TestUserOrganizationsIndex(t *testing.T) {
 		if res.StatusCode != http.StatusUnauthorized {
 			t.Fatal("Status code not matched. Response is", res.StatusCode)
 		}
-
 		defer res.Body.Close()
 		bts, _ := ioutil.ReadAll(res.Body)
 		if !strings.Contains(string(bts), "Auhtentication failed") {
@@ -372,14 +336,45 @@ func TestUserOrganizationsIndex(t *testing.T) {
 		}
 	})
 
-	t.Run("OK", func(t *testing.T) {
-		path := "/api/user/{id}/organizations"
+	t.Run("Bad UserID", func(t *testing.T) {
+		_, _, tokenString := getValidUser(200, false)
+		defer deleteTestUser(200)
 		route := mux.NewRouter()
 		route.Use(middlewares.Authenticate)
 		route.HandleFunc(path, UserOrganizationsIndex)
 
-		req, _ := http.NewRequest(http.MethodGet, strings.Replace(path, "{id}", "200", 1), nil)
-		req.Header.Add("Authorization", tokenString300)
+		reqBodies := []string{`{}`, `{"UserID": "Invalid"}`, ``}
+		for _, v := range reqBodies {
+			req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("%v?filters=%v", path, v), nil)
+			req.Header.Add("Authorization", tokenString)
+			rr := httptest.NewRecorder()
+			route.ServeHTTP(rr, req)
+
+			res := rr.Result()
+			if res.StatusCode != http.StatusUnprocessableEntity {
+				t.Fatal("Status code not matched. Response is", res.StatusCode)
+			}
+
+			defer res.Body.Close()
+			bts, _ := ioutil.ReadAll(res.Body)
+			if !strings.Contains(string(bts), "Invalid User ID") {
+				t.Fatal("Invalid response message")
+			}
+		}
+
+	})
+
+	t.Run("Permission Denied", func(t *testing.T) {
+		_, _, tokenString := getValidUser(201, false)
+		defer deleteTestUser(201)
+		getValidUser(202, false)
+		defer deleteTestUser(202)
+		route := mux.NewRouter()
+		route.Use(middlewares.Authenticate)
+		route.HandleFunc(path, UserOrganizationsIndex)
+		payload := fmt.Sprintf(`{"UserID": %v}`, 202)
+		req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("%v?filters=%v", path, payload), nil)
+		req.Header.Add("Authorization", tokenString)
 		rr := httptest.NewRecorder()
 		route.ServeHTTP(rr, req)
 
@@ -387,24 +382,112 @@ func TestUserOrganizationsIndex(t *testing.T) {
 		if res.StatusCode != http.StatusForbidden {
 			t.Fatal("Status code not matched. Response is", res.StatusCode)
 		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "not allowed") {
+			t.Fatal("Invalid response message")
+		}
 	})
 
-	t.Run("OK", func(t *testing.T) {
-		path := "/api/user/{id}/organizations"
-		route := mux.NewRouter()
-		route.Use(middlewares.Authenticate)
-		route.HandleFunc(path, UserOrganizationsIndex)
+}
 
-		req, _ := http.NewRequest(http.MethodGet, strings.Replace(path, "{id}", "200", 1), nil)
-		req.Header.Add("Authorization", tokenString)
+func TestUserOrganizationsIndex_validate_response_data(t *testing.T) {
+	// ===========================
+	// Generating fake data START
+	// ===========================
+
+	users := []uint64{500, 501, 502, 503, 504}
+	orgs := []uint64{505, 506, 507, 508, 509, 510}
+	var tokens [5]string
+
+	for k, v := range users {
+		if v == 500 {
+			_, _, tokens[k] = getValidUser(v, true)
+		} else {
+			_, _, tokens[k] = getValidUser(v, false)
+		}
+		defer deleteTestUser(v)
+	}
+
+	for _, v := range orgs {
+		getValidOrganization(v, v-5)
+		defer deleteTestOrganization(v)
+	}
+
+	addUserToOrganization(501, 507)
+	addUserToOrganization(501, 508)
+	// ===========================
+	// Generating fake data END
+	// ===========================
+
+	path := "/api/user/organizations"
+	route := mux.NewRouter()
+	route.Use(middlewares.Authenticate)
+	route.HandleFunc(path, UserOrganizationsIndex)
+
+	t.Run("Root user requests for his organizations", func(t *testing.T) {
+		req, e := http.NewRequest(http.MethodGet, fmt.Sprintf("%v?filters=%v", path, fmt.Sprintf(`{"UserID": %v}`, users[0])), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", tokens[0])
 		rr := httptest.NewRecorder()
 		route.ServeHTTP(rr, req)
-
 		res := rr.Result()
 		if res.StatusCode != http.StatusOK {
 			t.Fatal("Status code not matched. Response is", res.StatusCode)
 		}
+
+		var orgs []models.User
+		json.NewDecoder(res.Body).Decode(&orgs)
+		if len(orgs) != 1 && orgs[0].ID != 505 {
+			t.Fatal(orgs)
+		}
 	})
+
+	t.Run("Root user requests for all organizations", func(t *testing.T) {
+		req, e := http.NewRequest(http.MethodGet, fmt.Sprintf("%v?filters=%v", path, ""), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", tokens[0])
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+		if res.StatusCode != http.StatusOK {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		var orgs []models.User
+		json.NewDecoder(res.Body).Decode(&orgs)
+		if len(orgs) < 5 {
+			//5 organizations defined at this test, maybe some other organizations exist on test time
+
+			t.Fatal("Atleast 5 organization must return")
+		}
+	})
+
+	t.Run("None Root user requests for his organizations", func(t *testing.T) {
+		req, e := http.NewRequest(http.MethodGet, fmt.Sprintf("%v?filters=%v", path, fmt.Sprintf(`{"UserID": %v}`, users[1])), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", tokens[1])
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+		if res.StatusCode != http.StatusOK {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		var orgs []models.User
+		json.NewDecoder(res.Body).Decode(&orgs)
+		if len(orgs) != 3 {
+			t.Fatal(orgs)
+		}
+	})
+
 }
 
 func TestCanViewOrganizationsOfUser(t *testing.T) {

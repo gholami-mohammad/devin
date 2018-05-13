@@ -166,12 +166,14 @@ func TestInviteUser(t *testing.T) {
 
 	t.Run("Permission Denied", func(t *testing.T) {
 		getValidUser(2, true)
+		_, _, tokenString3 := getValidUser(3, false)
+		defer deleteTestUser(3)
 		getValidOrganization(102, 2)
 		defer deleteTestUser(2)
 		defer deleteTestOrganization(102)
 
 		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "102", 1), strings.NewReader(`{"Identifier":"mgh2"}`))
-		req.Header.Add("Authorization", tokenString)
+		req.Header.Add("Authorization", tokenString3)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
 		route.ServeHTTP(rr, req)

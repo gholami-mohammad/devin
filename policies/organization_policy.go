@@ -43,3 +43,12 @@ func CanViewOrganizationsOfUser(authenticatedUser models.User, userID uint64) bo
 
 	return false
 }
+
+// CanSeePendingInvitations check permission of authenticatedUser to view pending invitation requests of userID
+func CanViewPendingInvitations(authenticatedUser models.User, userID uint64) bool {
+	if authenticatedUser.ID == userID || authenticatedUser.IsRootUser == true {
+		return true
+	}
+
+	return false
+}

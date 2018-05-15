@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +15,13 @@ import (
 	"devin/middlewares"
 	"devin/models"
 )
+
+var testID uint64 = 10000
+
+func getTestID() uint64 {
+	testID += 1
+	return testID
+}
 
 func TestInviteUser(t *testing.T) {
 	_, _, tokenString := getValidUser(100, true)
@@ -319,4 +328,58 @@ func TestInviteUser(t *testing.T) {
 			t.Fatal("Status code not matched. Response is", res.StatusCode)
 		}
 	})
+}
+
+func createPendingInvitation(userID, creatorID, orgID uint64) {
+	db := database.NewGORMInstance()
+	defer db.Close()
+
+	db.Exec(`insert into user_organization_invitations
+        (user_id, organization_id, created_by_id)  values
+        (?, ?, ?)`, userID, orgID, creatorID)
+}
+
+func TestPendingInvitationRequests(t *testing.T) {
+	id1 := getTestID()
+	id2 := getTestID()
+	id3 := getTestID()
+	getValidUser(id1, true)
+	defer deleteTestUser(id1)
+	_, _, token := getValidUser(id2, true)
+	defer deleteTestUser(id2)
+	getValidOrganization(id3, id1)
+	defer deleteTestOrganization(id3)
+	createPendingInvitation(id2, id1, id3)
+
+	path := "/api/user/{id}/pending_invitations"
+
+	t.Run("OK", func(t *testing.T) {
+		route := mux.NewRouter()
+		route.Use(middlewares.Authenticate)
+		route.HandleFunc(path, PendingInvitationRequests)
+
+		req, e := http.NewRequest(http.MethodGet, strings.Replace(path, "{id}", fmt.Sprintf("%v", id2), 1), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		req.Header.Add("Authorization", token)
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		var items []models.UserOrganizationInvitation
+		e = json.Unmarshal(bts, &items)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		if len(items) < 1 {
+			t.Fatal("Incorrect response count")
+		}
+	})
+
 }

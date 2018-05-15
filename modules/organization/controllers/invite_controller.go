@@ -312,10 +312,8 @@ func canViewPendingInvitations(w http.ResponseWriter, authUser models.User, targ
 
 // userExists check for existance of user with given ID
 func userExists(w http.ResponseWriter, db *gorm.DB, userID uint64) (e error) {
-	var cnt struct {
-		Count uint64
-	}
-	e = db.Model(&models.User{}).Where("id=?", userID).Count(&cnt).Error
+	var count uint64
+	e = db.Model(&models.User{}).Where("id=?", userID).Count(&count).Error
 	if e != nil {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusInternalServerError,
@@ -325,7 +323,7 @@ func userExists(w http.ResponseWriter, db *gorm.DB, userID uint64) (e error) {
 		return
 	}
 
-	if cnt.Count == 0 {
+	if count == 0 {
 		err := helpers.ErrorResponse{
 			ErrorCode: http.StatusInternalServerError,
 			Message:   "User not found",

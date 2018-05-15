@@ -13,6 +13,7 @@ import (
 	"devin/database"
 	"devin/helpers"
 	"devin/models"
+	"devin/modules/organization/repository"
 	"devin/policies"
 )
 
@@ -254,4 +255,85 @@ func saveInvitation(w http.ResponseWriter, db *gorm.DB, targetUser models.User, 
 
 	return nil
 
+}
+
+//PendingInvitationRequests return a list of pending organization invitations
+//User ID passed in URL
+func PendingInvitationRequests(w http.ResponseWriter, r *http.Request) {
+	authUser, e := getAuthenticatedUser(w, r)
+	if e != nil {
+		return
+	}
+
+	userID, e := extractIDFromURL(w, r)
+	if e != nil {
+		return
+	}
+
+	db := database.NewGORMInstance()
+	defer db.Close()
+
+	if userExists(w, db, userID) != nil {
+		return
+	}
+
+	if canViewPendingInvitations(w, authUser, userID) == false {
+		return
+	}
+
+	pendingRequests, e := repository.GetPendingInvitaionsByUserID(db, userID)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusInternalServerError,
+			Message:   "Fail to load pending requests",
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(&pendingRequests)
+	return
+}
+
+// canViewPendingInvitations check permission and handle its error
+func canViewPendingInvitations(w http.ResponseWriter, authUser models.User, targetUserID uint64) bool {
+	if policies.CanViewPendingInvitations(authUser, targetUserID) == false {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusForbidden,
+			Message:   "This request is not permitted for you.",
+		}
+		helpers.NewErrorResponse(w, &err)
+
+		return false
+	}
+
+	return true
+}
+
+// userExists check for existance of user with given ID
+func userExists(w http.ResponseWriter, db *gorm.DB, userID uint64) (e error) {
+	var cnt struct {
+		Count uint64
+	}
+	e = db.Model(&models.User{}).Where("id=?", userID).Count(&cnt).Error
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusInternalServerError,
+			Message:   "User not found",
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	if cnt.Count == 0 {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusInternalServerError,
+			Message:   "User not found",
+		}
+		e = errors.New(err.Message)
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	return
 }

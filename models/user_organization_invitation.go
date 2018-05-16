@@ -7,6 +7,7 @@ type UserOrganizationInvitation struct {
 	UserID             *uint64
 	Email              *string
 	OrganizationID     uint64
+	Organization       *User
 	Accepted           *bool
 	AcceptedRejectedAt *time.Time
 	CreatedByID        uint64

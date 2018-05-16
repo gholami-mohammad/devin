@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -24,14 +25,17 @@ func getTestID() uint64 {
 }
 
 func TestInviteUser(t *testing.T) {
-	_, _, tokenString := getValidUser(100, true)
-	defer deleteTestUser(100)
+	id1 := getTestID()
+	id2 := getTestID()
+	id3 := getTestID()
+	_, _, tokenString := getValidUser(id1, true)
+	defer deleteTestUser(id1)
 
-	getValidUser(200, false)
-	defer deleteTestUser(200)
+	getValidUser(id3, false)
+	defer deleteTestUser(id3)
 
-	getValidOrganization(101, 100)
-	defer deleteTestOrganization(101)
+	getValidOrganization(id2, id1)
+	defer deleteTestOrganization(id2)
 
 	path := "/api/organization/{id}/invite_user"
 	route := mux.NewRouter()
@@ -39,7 +43,7 @@ func TestInviteUser(t *testing.T) {
 	route.HandleFunc(path, InviteUser)
 
 	t.Run("Bad Content Type", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), nil)
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", fmt.Sprintf("%v", id2), 1), nil)
 		req.Header.Add("Authorization", tokenString)
 		rr := httptest.NewRecorder()
 		route.ServeHTTP(rr, req)
@@ -98,7 +102,7 @@ func TestInviteUser(t *testing.T) {
 	})
 
 	t.Run("Organization Not Found", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "10000999", 1), strings.NewReader(`{}`))
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1000099900000", 1), strings.NewReader(`{}`))
 		req.Header.Add("Authorization", tokenString)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
@@ -119,7 +123,7 @@ func TestInviteUser(t *testing.T) {
 		route := mux.NewRouter()
 		route.HandleFunc(path, InviteUser)
 
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), strings.NewReader(`{}`))
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", fmt.Sprintf("%v", id2), 1), strings.NewReader(`{}`))
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
 		route.ServeHTTP(rr, req)
@@ -136,7 +140,7 @@ func TestInviteUser(t *testing.T) {
 	})
 
 	t.Run("Empty Request body", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), nil)
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", fmt.Sprintf("%v", id2), 1), nil)
 		req.Header.Add("Authorization", tokenString)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
@@ -155,7 +159,7 @@ func TestInviteUser(t *testing.T) {
 	})
 
 	t.Run("Bad Request body", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), strings.NewReader("Bad Content"))
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", fmt.Sprintf("%v", id2), 1), strings.NewReader("Bad Content"))
 		req.Header.Add("Authorization", tokenString)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
@@ -200,7 +204,7 @@ func TestInviteUser(t *testing.T) {
 	})
 
 	t.Run("Empty Identifier", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), strings.NewReader(`{}`))
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", fmt.Sprintf("%v", id2), 1), strings.NewReader(`{}`))
 		req.Header.Add("Authorization", tokenString)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
@@ -219,7 +223,7 @@ func TestInviteUser(t *testing.T) {
 	})
 
 	t.Run("invited user not found", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "101", 1), strings.NewReader(`{"Identifier":"notfound_user"}`))
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", fmt.Sprintf("%v", id2), 1), strings.NewReader(`{"Identifier":"notfound_user"}`))
 		req.Header.Add("Authorization", tokenString)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
@@ -238,8 +242,8 @@ func TestInviteUser(t *testing.T) {
 	})
 
 	t.Run("User is member of organization", func(t *testing.T) {
-		var userID uint64 = 78
-		var orgID uint64 = 79
+		var userID uint64 = getTestID()
+		var orgID uint64 = getTestID()
 		_, _, ts := getValidUser(userID, true)
 		getValidOrganization(orgID, userID)
 		defer deleteTestUser(userID)
@@ -255,7 +259,7 @@ func TestInviteUser(t *testing.T) {
 
 		db.Create(&obj)
 
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "79", 1), strings.NewReader(`{"Identifier": "mgh78"}`))
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", fmt.Sprintf("%v", orgID), 1), strings.NewReader(fmt.Sprintf(`{"Identifier": "mgh%v"}`, userID)))
 		req.Header.Add("Authorization", ts)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
@@ -274,8 +278,8 @@ func TestInviteUser(t *testing.T) {
 	})
 
 	t.Run("User already invited", func(t *testing.T) {
-		var userID uint64 = 80
-		var orgID uint64 = 81
+		var userID uint64 = getTestID() //80
+		var orgID uint64 = getTestID()  //81
 		_, _, ts := getValidUser(userID, true)
 		getValidOrganization(orgID, userID)
 		defer deleteTestUser(userID)
@@ -290,7 +294,7 @@ func TestInviteUser(t *testing.T) {
 
 		db.Create(&obj)
 
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "81", 1), strings.NewReader(`{"Identifier": "mgh80"}`))
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", fmt.Sprintf("%v", orgID), 1), strings.NewReader(fmt.Sprintf(`{"Identifier": "mgh%v"}`, userID)))
 		req.Header.Add("Authorization", ts)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
@@ -309,11 +313,13 @@ func TestInviteUser(t *testing.T) {
 	})
 
 	t.Run("OK", func(t *testing.T) {
-		_, _, ts := getValidUser(66, true)
-		getValidOrganization(67, 66)
-		defer deleteTestUser(66)
-		defer deleteTestOrganization(67)
-		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "67", 1), strings.NewReader(`{"Identifier": "mgh66"}`))
+		id1 := getTestID()
+		id2 := getTestID()
+		_, _, ts := getValidUser(id1, true)
+		getValidOrganization(id2, id1)
+		defer deleteTestUser(id1)
+		defer deleteTestOrganization(id2)
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", fmt.Sprintf("%v", id2), 1), strings.NewReader(fmt.Sprintf(`{"Identifier": "mgh%v"}`, id1)))
 		req.Header.Add("Authorization", ts)
 		req.Header.Add("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
@@ -379,6 +385,106 @@ func TestPendingInvitationRequests(t *testing.T) {
 
 		if len(items) < 1 {
 			t.Fatal("Incorrect response count")
+		}
+	})
+
+	t.Run("Authentication faild", func(t *testing.T) {
+		route := mux.NewRouter()
+		route.HandleFunc(path, PendingInvitationRequests)
+
+		req, e := http.NewRequest(http.MethodGet, strings.Replace(path, "{id}", fmt.Sprintf("%v", id2), 1), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !bytes.Contains(bts, []byte("Auhtentication failed")) {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("Invalid ID in URL", func(t *testing.T) {
+		route := mux.NewRouter()
+		route.HandleFunc("/", PendingInvitationRequests)
+
+		req, e := http.NewRequest(http.MethodGet, "/", nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", token)
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !bytes.Contains(bts, []byte("Invalid User ID")) {
+
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("Requested user not exist", func(t *testing.T) {
+		id4 := getTestID()
+		deleteTestUser(id4)
+		route := mux.NewRouter()
+		route.Use(middlewares.Authenticate)
+		route.HandleFunc(path, PendingInvitationRequests)
+
+		req, e := http.NewRequest(http.MethodGet, strings.Replace(path, "{id}", fmt.Sprintf("%v", id4), 1), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		req.Header.Add("Authorization", token)
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !bytes.Contains(bts, []byte("User not found")) {
+
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("Permission denied", func(t *testing.T) {
+		id5 := getTestID()
+		id6 := getTestID()
+		_, _, tokenId5 := getValidUser(id5, false)
+		getValidUser(id6, false)
+		defer deleteTestUser(id5)
+		defer deleteTestUser(id6)
+		route := mux.NewRouter()
+		route.Use(middlewares.Authenticate)
+		route.HandleFunc(path, PendingInvitationRequests)
+
+		req, e := http.NewRequest(http.MethodGet, strings.Replace(path, "{id}", fmt.Sprintf("%v", id6), 1), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		req.Header.Add("Authorization", tokenId5)
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !bytes.Contains(bts, []byte("not permitted")) {
+
+			t.Fatal("Invalid response message", string(bts))
 		}
 	})
 

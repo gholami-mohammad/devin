@@ -316,7 +316,7 @@ func userExists(w http.ResponseWriter, db *gorm.DB, userID uint64) (e error) {
 	e = db.Model(&models.User{}).Where("id=?", userID).Count(&count).Error
 	if e != nil {
 		err := helpers.ErrorResponse{
-			ErrorCode: http.StatusInternalServerError,
+			ErrorCode: http.StatusNotFound,
 			Message:   "User not found",
 		}
 		helpers.NewErrorResponse(w, &err)
@@ -325,7 +325,7 @@ func userExists(w http.ResponseWriter, db *gorm.DB, userID uint64) (e error) {
 
 	if count == 0 {
 		err := helpers.ErrorResponse{
-			ErrorCode: http.StatusInternalServerError,
+			ErrorCode: http.StatusNotFound,
 			Message:   "User not found",
 		}
 		e = errors.New(err.Message)

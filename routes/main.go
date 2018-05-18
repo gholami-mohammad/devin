@@ -26,6 +26,8 @@ func LoadRoutes(r *mux.Router) *mux.Router {
 	secureArea.HandleFunc("/organization/list", org_ctrl.UserOrganizationsIndex).Methods(http.MethodGet)
 	secureArea.HandleFunc("/organization/{id:[0-9]+}/invite_user", org_ctrl.InviteUser).Methods(http.MethodPost)
 
+	secureArea.HandleFunc("/invitation/{id:[0-9]+}/set_acceptance/{acceptance_status:(?:accept|reject)}", org_ctrl.AcceptOrRejectInvitation)
+
 	secureArea.HandleFunc("/whoami", user_ctrl.Whoami).Methods(http.MethodGet)
 	secureArea.HandleFunc("/whois/{id:[0-9]+}", user_ctrl.Whois).Methods(http.MethodGet)
 	secureArea.HandleFunc("/profile_basic_info", user_ctrl.ProfileBasicInfo).Methods(http.MethodGet)

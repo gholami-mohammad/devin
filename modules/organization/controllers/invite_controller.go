@@ -335,3 +335,106 @@ func userExists(w http.ResponseWriter, db *gorm.DB, userID uint64) (e error) {
 
 	return
 }
+
+//AcceptOrRejectInvitation Accept or reject an invitation request
+//@Route=/api/invitation/{id}/set_acceptance/{acceptance_status}
+func AcceptOrRejectInvitation(w http.ResponseWriter, r *http.Request) {
+	authUser, e := getAuthenticatedUser(w, r)
+	if e != nil {
+		return
+	}
+
+	acceptanceStatus, e := extractAcceptanceStatusFromURL(w, r)
+	if e != nil {
+		return
+	}
+
+	invitationID, e := extractIDFromURL(w, r)
+	if e != nil {
+		return
+	}
+
+	db := database.NewGORMInstance()
+	defer db.Close()
+
+	invitation, e := getPendingInvitaion(w, db, invitationID)
+	if e != nil {
+		return
+	}
+
+	if canUserChangeAcceptanceStatus(w, authUser, invitation) == false {
+		return
+	}
+
+	e = repository.SetAcceptanceStatusOfInvitaion(db, invitationID, acceptanceStatus)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusInternalServerError,
+			Message:   "Fail to update acceptance status!",
+		}
+		e = errors.New(err.Message)
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	helpers.NewSuccessResponse(w, "Acceptance Status updated!")
+}
+
+//extractAcceptanceStatusFromURL try to extract acceptance_status parameter from request URL path.
+func extractAcceptanceStatusFromURL(w http.ResponseWriter, r *http.Request) (status bool, e error) {
+	statusString, ok := mux.Vars(r)["acceptance_status"]
+	if ok == false {
+		err := helpers.ErrorResponse{
+			Message:   "Invalid acceptance status.",
+			ErrorCode: http.StatusUnprocessableEntity,
+		}
+		helpers.NewErrorResponse(w, &err)
+		e = errors.New(err.Message)
+		return false, e
+	}
+
+	switch statusString {
+	case "accept":
+		return true, nil
+	case "reject":
+		return false, nil
+	default:
+		err := helpers.ErrorResponse{
+			Message:   "Invalid acceptance status.",
+			ErrorCode: http.StatusUnprocessableEntity,
+		}
+		helpers.NewErrorResponse(w, &err)
+		e = errors.New(err.Message)
+		return false, e
+	}
+}
+
+// canUserChangeAcceptanceStatus check edit permission and handle http errors
+func canUserChangeAcceptanceStatus(w http.ResponseWriter, user models.User, invitation models.UserOrganizationInvitation) bool {
+	if policies.CanUserChangeAcceptanceStatus(user, invitation) {
+		return true
+	}
+
+	err := helpers.ErrorResponse{
+		Message:   "Operation not permitted",
+		ErrorCode: http.StatusUnprocessableEntity,
+	}
+	helpers.NewErrorResponse(w, &err)
+
+	return false
+}
+
+//getPendingInvitaion load pending invitaion from DB and handle http errors of failuer
+func getPendingInvitaion(w http.ResponseWriter, db *gorm.DB, ID uint64) (invitation models.UserOrganizationInvitation, e error) {
+	invitation, e = repository.GetPendingInvitaionsByID(db, ID)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			Message:   "No match found",
+			ErrorCode: http.StatusNotFound,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	return
+}

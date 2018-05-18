@@ -372,9 +372,24 @@ func AcceptOrRejectInvitation(w http.ResponseWriter, r *http.Request) {
 			ErrorCode: http.StatusInternalServerError,
 			Message:   "Fail to update acceptance status!",
 		}
-		e = errors.New(err.Message)
+		err.Errors = make(map[string][]string)
+		err.Errors["dev"] = []string{e.Error()}
 		helpers.NewErrorResponse(w, &err)
 		return
+	}
+
+	if acceptanceStatus == true {
+		e = repository.AddUserToOrganziation(db, *invitation.UserID, authUser.ID, invitation.OrganizationID)
+		if e != nil {
+			err := helpers.ErrorResponse{
+				ErrorCode: http.StatusUnprocessableEntity,
+				Message:   "Fail to add user to organization!",
+			}
+			err.Errors = make(map[string][]string)
+			err.Errors["dev"] = []string{e.Error()}
+			helpers.NewErrorResponse(w, &err)
+			return
+		}
 	}
 
 	helpers.NewSuccessResponse(w, "Acceptance Status updated!")

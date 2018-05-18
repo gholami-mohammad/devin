@@ -538,6 +538,16 @@ func TestAcceptOrRejectInvitation(t *testing.T) {
 	})
 
 	t.Run("OK_Reject", func(t *testing.T) {
+		id1 := getTestID()
+		id2 := getTestID()
+		id3 := getTestID()
+		getValidUser(id1, false)
+		defer deleteTestUser(id1)
+		_, _, token := getValidUser(id3, false)
+		defer deleteTestUser(id3)
+		getValidOrganization(id2, id1)
+		defer deleteTestOrganization(id2)
+
 		invID := createPendingInvitation(id3, id1, id2)
 		route := mux.NewRouter()
 		route.Use(middlewares.Authenticate)
@@ -563,6 +573,36 @@ func TestAcceptOrRejectInvitation(t *testing.T) {
 		}
 
 		if !bytes.Contains(bts, []byte("updated")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("User already added", func(t *testing.T) {
+		invID := createPendingInvitation(id3, id1, id2)
+		route := mux.NewRouter()
+		route.Use(middlewares.Authenticate)
+		route.HandleFunc(path, AcceptOrRejectInvitation)
+
+		req, e := http.NewRequest(http.MethodGet, fmt.Sprintf("/%v/%v", invID, "accept"), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", token)
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		bts, e := ioutil.ReadAll(res.Body)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		if !bytes.Contains(bts, []byte("member")) {
 			t.Fatal("Invalid response message", string(bts))
 		}
 	})

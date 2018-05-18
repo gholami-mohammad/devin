@@ -27,7 +27,7 @@ func GetPendingInvitaionsByID(db *gorm.DB, ID uint64) (pendingInvitation models.
 // SetAcceptanceStatusOfInvitaion set true for accepted or false for rejected to `accepted` column
 func SetAcceptanceStatusOfInvitaion(db *gorm.DB, ID uint64, status bool) (e error) {
 	return db.Model(&models.UserOrganizationInvitation{}).
-		Where("id=? AND accepted IS NULL").
+		Where("id=? AND accepted IS NULL", ID).
 		UpdateColumn("accepted", status).
 		Error
 }

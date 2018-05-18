@@ -417,7 +417,7 @@ func canUserChangeAcceptanceStatus(w http.ResponseWriter, user models.User, invi
 
 	err := helpers.ErrorResponse{
 		Message:   "Operation not permitted",
-		ErrorCode: http.StatusUnprocessableEntity,
+		ErrorCode: http.StatusForbidden,
 	}
 	helpers.NewErrorResponse(w, &err)
 

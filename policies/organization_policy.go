@@ -52,3 +52,17 @@ func CanViewPendingInvitations(authenticatedUser models.User, userID uint64) boo
 
 	return false
 }
+
+//CanUserChangeAcceptanceStatus check permission for changing acceptance status of an invitation
+func CanUserChangeAcceptanceStatus(user models.User, invitation models.UserOrganizationInvitation) bool {
+	// Accepted or rejected invitaions can't be changed
+	if invitation.Accepted != nil || invitation.UserID == nil {
+		return false
+	}
+
+	if user.ID == *invitation.UserID || user.IsRootUser == true {
+		return true
+	}
+
+	return false
+}

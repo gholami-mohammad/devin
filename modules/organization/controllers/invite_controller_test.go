@@ -336,13 +336,18 @@ func TestInviteUser(t *testing.T) {
 	})
 }
 
-func createPendingInvitation(userID, creatorID, orgID uint64) {
+func createPendingInvitation(userID, creatorID, orgID uint64) (id uint64) {
 	db := database.NewGORMInstance()
 	defer db.Close()
 
-	db.Exec(`insert into user_organization_invitations
+	var IDStruct struct {
+		ID uint64
+	}
+	db.Raw(`insert into user_organization_invitations
         (user_id, organization_id, created_by_id)  values
-        (?, ?, ?)`, userID, orgID, creatorID)
+        (?, ?, ?)
+        returning id`, userID, orgID, creatorID).Scan(&IDStruct)
+	return IDStruct.ID
 }
 
 func TestPendingInvitationRequests(t *testing.T) {
@@ -426,7 +431,7 @@ func TestPendingInvitationRequests(t *testing.T) {
 
 		defer res.Body.Close()
 		bts, _ := ioutil.ReadAll(res.Body)
-		if !bytes.Contains(bts, []byte("Invalid User ID")) {
+		if !bytes.Contains(bts, []byte("Invalid ID")) {
 
 			t.Fatal("Invalid response message", string(bts))
 		}
@@ -488,4 +493,259 @@ func TestPendingInvitationRequests(t *testing.T) {
 		}
 	})
 
+}
+
+func TestAcceptOrRejectInvitation(t *testing.T) {
+	path := "/{id}/{acceptance_status}"
+	id1 := getTestID()
+	id2 := getTestID()
+	id3 := getTestID()
+	getValidUser(id1, false)
+	defer deleteTestUser(id1)
+	_, _, token := getValidUser(id3, false)
+	defer deleteTestUser(id3)
+	getValidOrganization(id2, id1)
+	defer deleteTestOrganization(id2)
+
+	t.Run("OK_Accept", func(t *testing.T) {
+		invID := createPendingInvitation(id3, id1, id2)
+		route := mux.NewRouter()
+		route.Use(middlewares.Authenticate)
+		route.HandleFunc(path, AcceptOrRejectInvitation)
+
+		req, e := http.NewRequest(http.MethodGet, fmt.Sprintf("/%v/%v", invID, "accept"), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", token)
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		bts, e := ioutil.ReadAll(res.Body)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusOK {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		if !bytes.Contains(bts, []byte("updated")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("OK_Reject", func(t *testing.T) {
+		invID := createPendingInvitation(id3, id1, id2)
+		route := mux.NewRouter()
+		route.Use(middlewares.Authenticate)
+		route.HandleFunc(path, AcceptOrRejectInvitation)
+
+		req, e := http.NewRequest(http.MethodGet, fmt.Sprintf("/%v/%v", invID, "reject"), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", token)
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		bts, e := ioutil.ReadAll(res.Body)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusOK {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		if !bytes.Contains(bts, []byte("updated")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("Authentication failed", func(t *testing.T) {
+		invID := createPendingInvitation(id3, id1, id2)
+		route := mux.NewRouter()
+		route.HandleFunc(path, AcceptOrRejectInvitation)
+
+		req, e := http.NewRequest(http.MethodGet, fmt.Sprintf("/%v/%v", invID, "reject"), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		bts, e := ioutil.ReadAll(res.Body)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusUnauthorized {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		if !bytes.Contains(bts, []byte("Auhtentication failed")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("No Acceptance Status", func(t *testing.T) {
+		invID := createPendingInvitation(id3, id1, id2)
+		route := mux.NewRouter()
+		route.HandleFunc("/{id}", AcceptOrRejectInvitation)
+		route.Use(middlewares.Authenticate)
+
+		req, e := http.NewRequest(http.MethodGet, fmt.Sprintf("/%v", invID), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", token)
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		bts, e := ioutil.ReadAll(res.Body)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		if !bytes.Contains(bts, []byte("Invalid acceptance status")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("Bad Acceptance Status", func(t *testing.T) {
+		invID := createPendingInvitation(id3, id1, id2)
+		route := mux.NewRouter()
+		route.HandleFunc(path, AcceptOrRejectInvitation)
+		route.Use(middlewares.Authenticate)
+
+		req, e := http.NewRequest(http.MethodGet, fmt.Sprintf("/%v/%v", invID, "invalid"), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", token)
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		bts, e := ioutil.ReadAll(res.Body)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		if !bytes.Contains(bts, []byte("Invalid acceptance status")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("No ID passed in url", func(t *testing.T) {
+		route := mux.NewRouter()
+		route.HandleFunc("/{acceptance_status}", AcceptOrRejectInvitation)
+		route.Use(middlewares.Authenticate)
+
+		req, e := http.NewRequest(http.MethodGet, "/accept", nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", token)
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		bts, e := ioutil.ReadAll(res.Body)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		if !bytes.Contains(bts, []byte("Invalid ID")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("Invitation not found", func(t *testing.T) {
+
+		route := mux.NewRouter()
+		route.HandleFunc(path, AcceptOrRejectInvitation)
+		route.Use(middlewares.Authenticate)
+
+		req, e := http.NewRequest(http.MethodGet, fmt.Sprintf("/%v/%v", "0", "accept"), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", token)
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		bts, e := ioutil.ReadAll(res.Body)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusNotFound {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		if !bytes.Contains(bts, []byte("No match found")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("Permission denied", func(t *testing.T) {
+		invID := createPendingInvitation(id1, id1, id2)
+		route := mux.NewRouter()
+		route.HandleFunc(path, AcceptOrRejectInvitation)
+		route.Use(middlewares.Authenticate)
+
+		req, e := http.NewRequest(http.MethodGet, fmt.Sprintf("/%v/%v", invID, "accept"), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		req.Header.Add("Authorization", token)
+
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		bts, e := ioutil.ReadAll(res.Body)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusForbidden {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		if !bytes.Contains(bts, []byte("Operation not permitted")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
 }

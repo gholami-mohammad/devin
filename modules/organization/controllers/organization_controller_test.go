@@ -183,7 +183,7 @@ func TestSave(t *testing.T) {
 		}
 		defer res.Body.Close()
 		bts, _ := ioutil.ReadAll(res.Body)
-		if !strings.Contains(string(bts), "Invalid User ID") {
+		if !strings.Contains(string(bts), "Invalid ID") {
 			t.Fatal("Invalid response message")
 		}
 	})
@@ -358,7 +358,7 @@ func TestUserOrganizationsIndex(t *testing.T) {
 			defer res.Body.Close()
 			bts, _ := ioutil.ReadAll(res.Body)
 			if !strings.Contains(string(bts), "Invalid User ID") {
-				t.Fatal("Invalid response message")
+				t.Fatal("Invalid response message", string(bts))
 			}
 		}
 

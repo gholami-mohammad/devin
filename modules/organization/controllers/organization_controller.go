@@ -159,10 +159,10 @@ func isRequestBodyNil(w http.ResponseWriter, r *http.Request) bool {
 
 //extractIDFromURL get ID variable form request URL
 func extractIDFromURL(w http.ResponseWriter, r *http.Request) (ID uint64, e error) {
-	userID, ok := mux.Vars(r)["id"]
+	IDString, ok := mux.Vars(r)["id"]
 	if ok == false {
 		err := helpers.ErrorResponse{
-			Message:   "Invalid User ID.",
+			Message:   "Invalid ID.",
 			ErrorCode: http.StatusUnprocessableEntity,
 		}
 		helpers.NewErrorResponse(w, &err)
@@ -170,10 +170,10 @@ func extractIDFromURL(w http.ResponseWriter, r *http.Request) (ID uint64, e erro
 		return
 	}
 
-	ID, e = strconv.ParseUint(userID, 10, 64)
+	ID, e = strconv.ParseUint(IDString, 10, 64)
 	if e != nil {
 		err := helpers.ErrorResponse{
-			Message:   "Invalid User ID. Just integer values accepted",
+			Message:   "Invalid ID. Just integer values accepted",
 			ErrorCode: http.StatusUnprocessableEntity,
 		}
 		helpers.NewErrorResponse(w, &err)

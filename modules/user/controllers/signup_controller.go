@@ -10,6 +10,8 @@ import (
 	"devin/database"
 	"devin/helpers"
 	"devin/models"
+
+	"github.com/jinzhu/gorm"
 )
 
 func init() {
@@ -141,4 +143,80 @@ func validateSignupInputs(user models.User) (e error, errMessages map[string][]s
 	}
 
 	return nil, nil
+}
+
+//VerifySignup verify email address of registered user
+// @Route: /api/signup/verify?token={token}
+// Method: GET
+func VerifySignup(w http.ResponseWriter, r *http.Request) {
+	token, e := extractTokenFromURL(w, r)
+	if e != nil {
+		return
+	}
+
+	db := database.NewGORMInstance()
+	defer db.Close()
+
+	user, e := getUserByVerificationToken(w, db, token)
+	if e != nil {
+		return
+	}
+
+	e = activateUserAccount(w, db, user)
+	if e != nil {
+		return
+	}
+
+	helpers.NewSuccessResponse(w, "Congratulation, Your account has been activated!")
+	return
+}
+
+//extractTokenFromURL get token parameter from query string e.g /api/signup/verify?token={token}
+func extractTokenFromURL(w http.ResponseWriter, r *http.Request) (token string, e error) {
+	token = r.URL.Query().Get("token")
+	if strings.EqualFold(token, "") {
+		err := helpers.ErrorResponse{}
+		err.ErrorCode = http.StatusUnprocessableEntity
+		err.Message = "Invalid verification token!"
+		helpers.NewErrorResponse(w, &err)
+		e = errors.New(err.Message)
+
+		return
+	}
+
+	return
+}
+
+// getUserByVerificationToken load user object from DB using email_verification_token
+// It handles http error responses
+func getUserByVerificationToken(w http.ResponseWriter, db *gorm.DB, token string) (user models.User, e error) {
+	db.Model(&user).Where("email_verification_token=?", token).First(&user)
+	if user.ID == 0 {
+		err := helpers.ErrorResponse{}
+		err.ErrorCode = http.StatusNotFound
+		err.Message = "Token not found!"
+		helpers.NewErrorResponse(w, &err)
+		e = errors.New(err.Message)
+
+		return
+	}
+
+	return
+}
+
+//activateUserAccount will set EmailVerified to true and handle http error resoonses
+func activateUserAccount(w http.ResponseWriter, db *gorm.DB, user models.User) (e error) {
+	e = db.Model(&user).Where("id=?", user.ID).UpdateColumn(models.User{EmailVerified: true}).Error
+	if e != nil {
+		err := helpers.ErrorResponse{}
+		err.ErrorCode = http.StatusNotFound
+		err.Message = "Fail to activate account. Please try again!"
+		err.Errors = make(map[string][]string)
+		err.Errors["dev"] = []string{e.Error()}
+		helpers.NewErrorResponse(w, &err)
+		e = errors.New(err.Message)
+
+		return
+	}
+	return
 }

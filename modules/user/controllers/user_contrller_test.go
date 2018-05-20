@@ -35,7 +35,7 @@ func getValidUser(id int, isRoot bool) (user models.User, claim models.Claim, to
 	return user, claim, tokenString
 }
 
-func deleteTestUser(id int) {
+func deleteTestUser(id uint64) {
 	db := database.NewGORMInstance()
 	defer db.Close()
 	db.Exec(`delete from users where id=?;`, id)

@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -10,7 +12,25 @@ import (
 	"devin/database"
 	"devin/helpers"
 	"devin/models"
+
+	"github.com/gorilla/mux"
 )
+
+func getUnverifiedUser() (user models.User) {
+	db := database.NewGORMInstance()
+	defer db.Close()
+	db.Exec("delete from users where username='unverified';")
+	user = models.User{
+		Email:    "unverified@example.com",
+		Username: "unverified",
+	}
+	user.SetNewEmailVerificationToken()
+
+	user.EmailVerified = false
+	db.Model(&user).Create(&user)
+
+	return
+}
 
 func TestSignup(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(Signup))
@@ -155,6 +175,77 @@ func TestSignup(t *testing.T) {
 		}
 		var user models.User
 		json.NewDecoder(res.Body).Decode(&user)
-		t.Log("Registration succssed. User ID is ", user.ID)
+		if user.ID == 0 {
+			t.Fatal("Registration failed")
+		}
 	})
+}
+
+func TestVerifySignup(t *testing.T) {
+	user := getUnverifiedUser()
+	defer deleteTestUser(user.ID)
+	path := "/api/signup/verify"
+	route := mux.NewRouter()
+	route.HandleFunc(path, VerifySignup)
+
+	t.Run("OK", func(t *testing.T) {
+		rr := httptest.NewRecorder()
+		req, e := http.NewRequest(http.MethodGet, path+"?token="+*user.EmailVerificationToken, nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		if res.StatusCode != http.StatusOK {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+		bts, _ := ioutil.ReadAll(res.Body)
+		defer res.Body.Close()
+
+		if !bytes.Contains(bts, []byte("activated")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("No token passed", func(t *testing.T) {
+		rr := httptest.NewRecorder()
+		req, e := http.NewRequest(http.MethodGet, path, nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+		bts, _ := ioutil.ReadAll(res.Body)
+		defer res.Body.Close()
+
+		if !bytes.Contains(bts, []byte("Invalid verification token")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
+	t.Run("Token not found", func(t *testing.T) {
+		rr := httptest.NewRecorder()
+		req, e := http.NewRequest(http.MethodGet, path+"?token=notfound", nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		route.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		if res.StatusCode != http.StatusNotFound {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+		bts, _ := ioutil.ReadAll(res.Body)
+		defer res.Body.Close()
+
+		if !bytes.Contains(bts, []byte("not found")) {
+			t.Fatal("Invalid response message", string(bts))
+		}
+	})
+
 }

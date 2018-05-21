@@ -201,6 +201,16 @@ func getUserByVerificationToken(w http.ResponseWriter, db *gorm.DB, token string
 		return
 	}
 
+	// if user.EmailVerified == true {
+	// 	err := helpers.ErrorResponse{}
+	// 	err.ErrorCode = http.StatusNotAcceptable
+	// 	err.Message = "This email already verified!"
+	// 	helpers.NewErrorResponse(w, &err)
+	// 	e = errors.New(err.Message)
+	//
+	// 	return
+	// }
+
 	return
 }
 

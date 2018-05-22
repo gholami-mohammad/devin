@@ -3,6 +3,8 @@ package policies
 import (
 	"devin/database"
 	"devin/models"
+
+	"github.com/jinzhu/gorm"
 )
 
 // CanCreateOrganization check permission of authenticatedUser for creating new organization
@@ -61,6 +63,24 @@ func CanUserChangeAcceptanceStatus(user models.User, invitation models.UserOrgan
 	}
 
 	if user.ID == *invitation.UserID || user.IsRootUser == true {
+		return true
+	}
+
+	return false
+}
+
+// CanViewMembersOfOrganization check permission of given user for viewing members of organization
+func CanViewMembersOfOrganization(db *gorm.DB, authenticatedUser, organization models.User) bool {
+	if authenticatedUser.ID == *organization.OwnerID || authenticatedUser.IsRootUser {
+		return true
+	}
+
+	var Cnt uint64
+	db.Model(&models.UserOrganization{}).
+		Where("user_id=? and organization_id=?", authenticatedUser.ID, organization.ID).
+		Count(&Cnt)
+
+	if Cnt != 0 {
 		return true
 	}
 

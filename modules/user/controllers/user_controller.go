@@ -289,6 +289,7 @@ func Whois(w http.ResponseWriter, r *http.Request) {
 	e = db.
 		Preload("UserOrganizationMapping").
 		Preload("OrganizationUserMapping").
+		Preload("OrganizationUserMapping.User").
 		Preload("Country").
 		Preload("Province").
 		Preload("City").

@@ -563,3 +563,20 @@ func saveOrganization(w http.ResponseWriter, db *gorm.DB, reqModel models.User) 
 
 	return reqModel, nil
 }
+
+//canUpdateUserOrganizationPermissions check permission of authenticated user
+//to update permissions of given user on an organization
+func canUpdateUserOrganizationPermissions(w http.ResponseWriter, db *gorm.DB, authUser, organization models.User) bool {
+	can := policies.CanUpdateUserOrganizationPermissions(db, authUser, organization)
+	if can == true {
+		return true
+	}
+
+	err := helpers.ErrorResponse{
+		ErrorCode: http.StatusInternalServerError,
+		Message:   "Operation not permitted.",
+	}
+	helpers.NewErrorResponse(w, &err)
+	return false
+
+}

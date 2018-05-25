@@ -86,3 +86,26 @@ func CanViewMembersOfOrganization(db *gorm.DB, authenticatedUser, organization m
 
 	return false
 }
+
+//CanUpdateUserOrganizationPermissions check permission of authenticated user
+//to update permissions of users on the given organization
+func CanUpdateUserOrganizationPermissions(db *gorm.DB, authenticatedUser, organization models.User) bool {
+	if authenticatedUser.IsRootUser || authenticatedUser.ID == *organization.OwnerID {
+		return true
+	}
+
+	var orgUser models.UserOrganization
+	db.Model(&models.UserOrganization{}).
+		Where("user_id=? and organization_id=?", authenticatedUser.ID, organization.ID).
+		First(&orgUser)
+
+	if orgUser.ID == 0 {
+		return false
+	}
+
+	if orgUser.IsAdminOfOrganization == true {
+		return true
+	}
+
+	return false
+}

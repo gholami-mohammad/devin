@@ -183,6 +183,31 @@ func extractIDFromURL(w http.ResponseWriter, r *http.Request) (ID uint64, e erro
 	return ID, nil
 }
 
+func extractUserIDFromURL(w http.ResponseWriter, r *http.Request, paramName string) (ID uint64, e error) {
+	IDString, ok := mux.Vars(r)[paramName]
+	if ok == false {
+		err := helpers.ErrorResponse{
+			Message:   "Invalid User ID.",
+			ErrorCode: http.StatusUnprocessableEntity,
+		}
+		helpers.NewErrorResponse(w, &err)
+		e = errors.New(err.Message)
+		return
+	}
+
+	ID, e = strconv.ParseUint(IDString, 10, 64)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			Message:   "Invalid User ID. Just integer values accepted",
+			ErrorCode: http.StatusUnprocessableEntity,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	return ID, nil
+}
+
 // getAuthenticatedUser get user who is now logged into the application
 func getAuthenticatedUser(w http.ResponseWriter, r *http.Request) (authUser models.User, e error) {
 	authUser, _, e = models.User{}.ExtractUserFromRequestContext(r)

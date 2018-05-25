@@ -10,10 +10,10 @@ func (Migration) MigratePasswordReset() (e error) {
         id bigserial NOT NULL,
         user_id bigint NOT NULL,
         token varchar(512) NOT NULL,
+        used_for_reset boolean DEFAULT false,
         created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
         updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
         expires_at timestamp with time zone,
-        used_for_reset boolean DEFAULT false,
 
         CONSTRAINT password_reset_pkey PRIMARY KEY (id),
         CONSTRAINT password_resets_user_id_users_id FOREIGN KEY (user_id)

@@ -15,7 +15,16 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"devin/modules/organization/repository"
+	user_repo "devin/modules/user/repository"
 )
+
+type permissionUpdatableData struct {
+	UserID                   uint64
+	OrganizationID           uint64
+	IsAdminOfOrganization    bool
+	CanCreateProject         bool
+	CanAddUserToOrganization bool
+}
 
 //extractOrganizationID Load organization ID from URL
 func extractOrganizationID(w http.ResponseWriter, r *http.Request, paramName string) (uint64, error) {
@@ -573,10 +582,41 @@ func canUpdateUserOrganizationPermissions(w http.ResponseWriter, db *gorm.DB, au
 	}
 
 	err := helpers.ErrorResponse{
-		ErrorCode: http.StatusInternalServerError,
+		ErrorCode: http.StatusForbidden,
 		Message:   "Operation not permitted.",
 	}
 	helpers.NewErrorResponse(w, &err)
 	return false
 
+}
+
+//updatePermissions handle updating of permissions and http errors
+func updatePermissions(w http.ResponseWriter, db *gorm.DB, reqModel permissionUpdatableData) (e error) {
+	e = db.Model(&models.UserOrganization{}).
+		Where("user_id=? AND organization_id=?", reqModel.UserID, reqModel.OrganizationID).
+		UpdateColumns(&reqModel).Error
+	if e != nil {
+		err := helpers.ErrorResponse{
+			Message:   "Fail to update",
+			ErrorCode: http.StatusInternalServerError,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+	return
+}
+
+//isUserExists check existance of user in DB and handle http errors
+func isUserExists(w http.ResponseWriter, db *gorm.DB, userID uint64) (e error) {
+	if user_repo.IsUserExists(db, userID) == true {
+		return
+	}
+
+	err := helpers.ErrorResponse{
+		Message:   "User Not Found",
+		ErrorCode: http.StatusNotFound,
+	}
+	helpers.NewErrorResponse(w, &err)
+	e = errors.New(err.Message)
+	return
 }

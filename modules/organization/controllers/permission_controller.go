@@ -6,7 +6,6 @@ import (
 
 	"devin/database"
 	"devin/helpers"
-	"devin/models"
 )
 
 //UpdateUserPermissionsOnOrganization Update permissions of given user on the given organization
@@ -40,6 +39,11 @@ func UpdateUserPermissionsOnOrganization(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	e = isUserExists(w, db, userID)
+	if e != nil {
+		return
+	}
+
 	if canUpdateUserOrganizationPermissions(w, db, authUser, organization) == false {
 		return
 	}
@@ -48,15 +52,7 @@ func UpdateUserPermissionsOnOrganization(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	type updatableData struct {
-		UserID                   uint64
-		OrganizationID           uint64
-		IsAdminOfOrganization    bool
-		CanCreateProject         bool
-		CanAddUserToOrganization bool
-	}
-
-	var reqModel updatableData
+	var reqModel permissionUpdatableData
 	e = json.NewDecoder(r.Body).Decode(&reqModel)
 	if e != nil {
 		err := helpers.ErrorResponse{
@@ -71,9 +67,10 @@ func UpdateUserPermissionsOnOrganization(w http.ResponseWriter, r *http.Request)
 	reqModel.UserID = userID
 	reqModel.OrganizationID = organizationID
 
-	db.Model(&models.UserOrganization{}).
-		Where("user_id=? AND organization_id=?", reqModel.UserID, reqModel.OrganizationID).
-		UpdateColumns(&reqModel)
+	e = updatePermissions(w, db, reqModel)
+	if e != nil {
+		return
+	}
 
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&reqModel)

@@ -26,7 +26,7 @@ func LoadRoutes(r *mux.Router) *mux.Router {
 
 	secureArea.HandleFunc("/organization/list", org_ctrl.UserOrganizationsIndex).Methods(http.MethodGet)
 	secureArea.HandleFunc("/organization/{id:[0-9]+}/invite_user", org_ctrl.InviteUser).Methods(http.MethodPost)
-	secureArea.HandleFunc("/organization/{id:[0-9]+}/user/{id:[0-9]+}/update_permissions", org_ctrl.UpdateUserPermissionsOnOrganization).Methods(http.MethodPost)
+	secureArea.HandleFunc("/organization/{organization_id:[0-9]+}/user/{user_id:[0-9]+}/update_permissions", org_ctrl.UpdateUserPermissionsOnOrganization).Methods(http.MethodPost)
 
 	secureArea.HandleFunc("/invitation/{id:[0-9]+}/set_acceptance/{acceptance_status:(?:accept|reject)}", org_ctrl.AcceptOrRejectInvitation)
 

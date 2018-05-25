@@ -29,7 +29,7 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	OrganizationID, e := extractOrganizationID(w, r)
+	OrganizationID, e := extractOrganizationID(w, r, "id")
 	if e != nil {
 		return
 	}
@@ -85,8 +85,8 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 //extractOrganizationID Load organization ID from URL
-func extractOrganizationID(w http.ResponseWriter, r *http.Request) (uint64, error) {
-	orgID, ok := mux.Vars(r)["id"]
+func extractOrganizationID(w http.ResponseWriter, r *http.Request, paramName string) (uint64, error) {
+	orgID, ok := mux.Vars(r)[paramName]
 	if !ok {
 		err := helpers.ErrorResponse{
 			Message:   "Invalid Organization ID.",

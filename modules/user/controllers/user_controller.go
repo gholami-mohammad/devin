@@ -212,6 +212,83 @@ func UpdateUsername(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// UpdateEmail will update email of giver userID
+func UpdateEmail(w http.ResponseWriter, r *http.Request) {
+	db := database.NewGORMInstance()
+	defer db.Close()
+	user, err := handleProfileSharedErrors(r, db)
+	if err != nil {
+		helpers.NewErrorResponse(w, err)
+		return
+	}
+
+	var reqModel struct {
+		Email string
+	}
+
+	e := json.NewDecoder(r.Body).Decode(&reqModel)
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusInternalServerError,
+			Message:   "Invalid request body",
+		}
+		log.Println("Error on profile data decoding,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	reqModel.Email = strings.ToLower(reqModel.Email)
+
+	//Check for valid characters
+	isValidEmail := helpers.Validator{}.IsValidEmailFormat(reqModel.Email)
+	if isValidEmail == false {
+		messages := make(map[string][]string)
+		messages["Email"] = []string{"This email has invalid characters."}
+		err := helpers.ErrorResponse{
+			Message:   "Invalid email.",
+			ErrorCode: http.StatusUnprocessableEntity,
+			Errors:    messages,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+
+	}
+
+	//Check dupication
+	isUnique, _ := user.IsUniqueValue(db, "email", reqModel.Email, user.ID)
+	if isUnique == false {
+		messages := make(map[string][]string)
+		messages["Email"] = []string{"This email is already taken."}
+		err := helpers.ErrorResponse{
+			Message:   "Invalid email.",
+			ErrorCode: http.StatusUnprocessableEntity,
+			Errors:    messages,
+		}
+		helpers.NewErrorResponse(w, &err)
+		return
+
+	}
+
+	//Update
+	user.Email = reqModel.Email
+	e = db.Model(&user).UpdateColumn(&reqModel).Error
+	if e != nil {
+		err := helpers.ErrorResponse{
+			ErrorCode: http.StatusInternalServerError,
+			Message:   "Error on updating user data.",
+		}
+		log.Println("Error on updating user data,", e)
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&user)
+
+}
+
 // Whoami load profile data of current logged in user
 func Whoami(w http.ResponseWriter, r *http.Request) {
 	authUser, _, e := models.User{}.ExtractUserFromRequestContext(r)

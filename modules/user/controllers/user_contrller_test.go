@@ -394,6 +394,94 @@ func TestUpdateUsername(t *testing.T) {
 
 }
 
+func TestUpdateEmail(t *testing.T) {
+	_, _, tokenString := getValidUser(1, true)
+	getValidUser(2, false)
+	defer deleteTestUser(1)
+	defer deleteTestUser(2)
+
+	route := mux.NewRouter()
+	path := "/user/{id}/update_email"
+	route.Handle(path, http.HandlerFunc(UpdateEmail))
+	route.Use(middlewares.Authenticate)
+
+	t.Run("Invalid request body", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), strings.NewReader("Bad Request body"))
+
+		req.Header.Add("Authorization", tokenString)
+		req.Header.Add("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+
+		if res.StatusCode != http.StatusInternalServerError {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "Invalid request body") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("Invalid email charachters", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), strings.NewReader(`{"Email": "Bad**&&email"}`))
+
+		req.Header.Add("Authorization", tokenString)
+		req.Header.Add("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "invalid characters") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("Email already taken", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), strings.NewReader(`{"Email": "m6devin2@gmail.com"}`))
+
+		req.Header.Add("Authorization", tokenString)
+		req.Header.Add("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+
+		if res.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+		defer res.Body.Close()
+		bts, _ := ioutil.ReadAll(res.Body)
+		if !strings.Contains(string(bts), "already taken") {
+			t.Fatal("Invalid response message")
+		}
+	})
+
+	t.Run("OK", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, strings.Replace(path, "{id}", "1", 1), strings.NewReader(`{"Email": "m6devin1@updated.com"}`))
+
+		req.Header.Add("Authorization", tokenString)
+		req.Header.Add("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		route.ServeHTTP(rr, req)
+		res := rr.Result()
+
+		if res.StatusCode != http.StatusOK {
+			t.Fatal("Status code not matched. Response is", res.StatusCode)
+		}
+
+	})
+
+}
+
 func TestProfileBasicInfo(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(ProfileBasicInfo))
 	defer server.Close()

@@ -18,6 +18,10 @@ func (Migration) MigrateUserOrganizationInvitations() (e error) {
         updated_at              timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
 
         CONSTRAINT user_organization_invitations_pkey PRIMARY KEY (id),
+        CONSTRAINT user_organization_invitations_user_id_users_id FOREIGN KEY (user_id)
+            REFERENCES public.users (id)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE,
         CONSTRAINT user_organization_invitations_organization_id_users_id FOREIGN KEY (organization_id)
             REFERENCES public.users (id)
             ON UPDATE CASCADE

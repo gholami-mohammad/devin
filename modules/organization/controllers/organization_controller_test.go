@@ -20,7 +20,7 @@ func getValidUser(id uint64, isRoot bool) (user models.User, claim models.Claim,
 	db := database.NewGORMInstance()
 	defer db.Close()
 	db.Exec(`delete from users where id=?;`, id)
-	e := db.Exec(`insert into users (id, username, email, is_root_user) values (?, ?, ?, ?)`, id, fmt.Sprintf("mgh%v", id), fmt.Sprintf("m6devin%v@gmail.com", id), isRoot).Error
+	e := db.Exec(`insert into users (id, username, email, is_root_user, user_type) values (?, ?, ?, ?, 1)`, id, fmt.Sprintf("mgh%v", id), fmt.Sprintf("m6devin%v@gmail.com", id), isRoot).Error
 	if e != nil {
 		panic(e.Error())
 	}

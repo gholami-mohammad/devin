@@ -149,7 +149,7 @@ func validateSignupInputs(user models.User) (e error, errMessages map[string][]s
 // @Route: /api/signup/verify?token={token}
 // Method: GET
 func VerifySignup(w http.ResponseWriter, r *http.Request) {
-	token, e := extractTokenFromURL(w, r)
+	token, e := extractTokenFromURLQS(w, r)
 	if e != nil {
 		return
 	}
@@ -171,8 +171,8 @@ func VerifySignup(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-//extractTokenFromURL get token parameter from query string e.g /api/signup/verify?token={token}
-func extractTokenFromURL(w http.ResponseWriter, r *http.Request) (token string, e error) {
+//extractTokenFromURLQS get token parameter from query string e.g /api/signup/verify?token={token}
+func extractTokenFromURLQS(w http.ResponseWriter, r *http.Request) (token string, e error) {
 	token = r.URL.Query().Get("token")
 	if strings.EqualFold(token, "") {
 		err := helpers.ErrorResponse{}

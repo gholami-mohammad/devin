@@ -2,6 +2,7 @@ package repository
 
 import (
 	"devin/models"
+	"errors"
 
 	"github.com/jinzhu/gorm"
 )
@@ -14,4 +15,15 @@ func IsUserExists(db *gorm.DB, userID uint64) bool {
 		return false
 	}
 	return true
+}
+
+// GetUserByEmail Load related user by given email address
+func GetUserByEmail(db *gorm.DB, email string) (user models.User, e error) {
+	db.Model(&models.User{}).Where("email=? AND user_type=1", email).First(&user)
+	if user.ID == 0 {
+		e = errors.New("User not found")
+		return
+	}
+
+	return
 }

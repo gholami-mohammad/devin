@@ -48,7 +48,7 @@ func UpdateUserPermissionsOnOrganization(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if isRequestBodyNil(w, r) {
+	if helpers.IsRequestBodyNil(w, r) {
 		return
 	}
 

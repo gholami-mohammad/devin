@@ -68,7 +68,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isRequestBodyNil(w, r) == true {
+	if helpers.IsRequestBodyNil(w, r) == true {
 		return
 	}
 

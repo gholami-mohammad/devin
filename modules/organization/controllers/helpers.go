@@ -351,21 +351,6 @@ func isJsonRequest(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-// isRequestBodyNil check request body to being not nil
-func isRequestBodyNil(w http.ResponseWriter, r *http.Request) bool {
-	// Check request boby
-	if r.Body == nil {
-		err := helpers.ErrorResponse{
-			ErrorCode: http.StatusInternalServerError,
-			Message:   "Request body cant be empty",
-		}
-		helpers.NewErrorResponse(w, &err)
-		return true
-	}
-
-	return false
-}
-
 //extractIDFromURL get ID variable form request URL
 func extractIDFromURL(w http.ResponseWriter, r *http.Request) (ID uint64, e error) {
 	IDString, ok := mux.Vars(r)["id"]

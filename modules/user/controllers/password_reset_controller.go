@@ -40,7 +40,7 @@ func RequestPasswordReset(w http.ResponseWriter, r *http.Request) {
 	var reset models.PasswordReset
 	reset.UserID = user.ID
 	reset.UsedForReset = false
-	reset.Token = helpers.RandomString(26)
+	reset.Token = helpers.RandomString(64)
 	reset.ExpiresAt = time.Now().Add(24 * time.Hour)
 
 	db.Model(&models.PasswordReset{}).Create(&reset)

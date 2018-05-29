@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -34,6 +35,7 @@ func RequestPasswordReset(w http.ResponseWriter, r *http.Request) {
 	reset.UserID = user.ID
 	reset.UsedForReset = false
 	reset.Token = helpers.RandomString(26)
+	reset.ExpiresAt = time.Now().Add(24 * time.Hour)
 
 	db.Model(&models.PasswordReset{}).Create(&reset)
 

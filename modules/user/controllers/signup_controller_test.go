@@ -223,7 +223,7 @@ func TestVerifySignup(t *testing.T) {
 		bts, _ := ioutil.ReadAll(res.Body)
 		defer res.Body.Close()
 
-		if !bytes.Contains(bts, []byte("Invalid verification token")) {
+		if !bytes.Contains(bts, []byte("Invalid token")) {
 			t.Fatal("Invalid response message", string(bts))
 		}
 	})

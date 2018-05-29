@@ -177,7 +177,7 @@ func extractTokenFromURLQS(w http.ResponseWriter, r *http.Request) (token string
 	if strings.EqualFold(token, "") {
 		err := helpers.ErrorResponse{}
 		err.ErrorCode = http.StatusUnprocessableEntity
-		err.Message = "Invalid verification token!"
+		err.Message = "Invalid token!"
 		helpers.NewErrorResponse(w, &err)
 		e = errors.New(err.Message)
 

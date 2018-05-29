@@ -17,9 +17,10 @@ import (
 
 //RequestPasswordReset generate token to reset user's password
 // @Mehtod: POST
-// @Route: /api/password_reset/request?email={email}
+// @Route: /api/password_reset/request
+// @PostParams: email={email}
 func RequestPasswordReset(w http.ResponseWriter, r *http.Request) {
-	email, e := extractEmailFromURL(w, r)
+	email, e := extractEmailFromRequest(w, r)
 	if e != nil {
 		return
 	}
@@ -42,9 +43,11 @@ func RequestPasswordReset(w http.ResponseWriter, r *http.Request) {
 	helpers.NewSuccessResponse(w, "Password reset link sent to your email, please click to reset your new password!")
 }
 
-// extractEmailFromURL gt value of email address in query string
-func extractEmailFromURL(w http.ResponseWriter, r *http.Request) (email string, e error) {
-	email = r.URL.Query().Get("email")
+// extractEmailFromRequest gt value of email address in query string
+func extractEmailFromRequest(w http.ResponseWriter, r *http.Request) (email string, e error) {
+	r.ParseForm()
+	email = r.Form.Get("email")
+
 	isValid := helpers.Validator{}.IsValidEmailFormat(email)
 	if isValid == true {
 		return

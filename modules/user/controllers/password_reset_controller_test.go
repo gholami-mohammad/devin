@@ -18,7 +18,7 @@ func TestRequestPasswordReset(t *testing.T) {
 
 		route := mux.NewRouter()
 		route.HandleFunc("/request", RequestPasswordReset)
-		req, e := http.NewRequest(http.MethodGet, "/request?email="+user.Email, nil)
+		req, e := http.NewRequest(http.MethodPost, "/request?email="+user.Email, nil)
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -39,7 +39,7 @@ func TestRequestPasswordReset(t *testing.T) {
 	t.Run("No Email in URL", func(t *testing.T) {
 		route := mux.NewRouter()
 		route.HandleFunc("/request", RequestPasswordReset)
-		req, e := http.NewRequest(http.MethodGet, "/request", nil)
+		req, e := http.NewRequest(http.MethodPost, "/request", nil)
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -60,7 +60,7 @@ func TestRequestPasswordReset(t *testing.T) {
 	t.Run("No User found by email", func(t *testing.T) {
 		route := mux.NewRouter()
 		route.HandleFunc("/request", RequestPasswordReset)
-		req, e := http.NewRequest(http.MethodGet, "/request?email=notfound@nothing.com", nil)
+		req, e := http.NewRequest(http.MethodPost, "/request?email=notfound@nothing.com", nil)
 		if e != nil {
 			t.Fatal(e)
 		}

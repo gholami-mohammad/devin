@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
@@ -20,6 +21,10 @@ import (
 // @Route: /api/password_reset/request
 // @PostParams: email={email}
 func RequestPasswordReset(w http.ResponseWriter, r *http.Request) {
+	if helpers.IsRequestBodyNil(w, r) {
+		return
+	}
+
 	email, e := extractEmailFromRequest(w, r)
 	if e != nil {
 		return
@@ -45,8 +50,13 @@ func RequestPasswordReset(w http.ResponseWriter, r *http.Request) {
 
 // extractEmailFromRequest gt value of email address in query string
 func extractEmailFromRequest(w http.ResponseWriter, r *http.Request) (email string, e error) {
-	r.ParseForm()
-	email = r.Form.Get("email")
+	var reqModel struct {
+		Email string
+	}
+
+	json.NewDecoder(r.Body).Decode(&reqModel)
+	defer r.Body.Close()
+	email = reqModel.Email
 
 	isValid := helpers.Validator{}.IsValidEmailFormat(email)
 	if isValid == true {

@@ -28,3 +28,19 @@ func NewSuccessResponse(w http.ResponseWriter, message string) error {
 
 	return json.NewEncoder(w).Encode(&ok)
 }
+
+// IsRequestBodyNil check request body to being not nil
+func IsRequestBodyNil(w http.ResponseWriter, r *http.Request) bool {
+	// Check request boby
+	if r.Body == nil {
+		err := ErrorResponse{
+			ErrorCode: http.StatusInternalServerError,
+			Message:   "Request body cant be empty",
+		}
+		NewErrorResponse(w, &err)
+
+		return true
+	}
+
+	return false
+}

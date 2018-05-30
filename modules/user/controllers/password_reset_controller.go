@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 
 	"devin/database"
@@ -94,24 +92,70 @@ func getUserByEmail(w http.ResponseWriter, db *gorm.DB, email string) (user mode
 
 //ValidatePasswordResetLink validate the token of password reset request
 // @Method: GET
-// @Route: /api/password_reset/validate/{token}
+// @Route: /api/password_reset/validate?token={token}
 func ValidatePasswordResetLink(w http.ResponseWriter, r *http.Request) {
+	token, e := extractTokenFromURLQS(w, r)
+	if e != nil {
+		return
+	}
+	db := database.NewGORMInstance()
+	defer db.Close()
 
-}
-
-// extractTokenFromURL extract token parameter from the URL e.g /api/password_reset/{token}
-func extractTokenFromURL(w http.ResponseWriter, r *http.Request) (token string, e error) {
-	token = mux.Vars(r)["token"]
-	if !strings.EqualFold(token, "") {
+	_, e = getUserByResetPasswordToken(w, db, token)
+	if e != nil {
 		return
 	}
 
-	err := helpers.ErrorResponse{
-		Message:   "Invalid content type.",
-		ErrorCode: http.StatusUnsupportedMediaType,
-	}
-	e = errors.New(err.Message)
-	helpers.NewErrorResponse(w, &err)
-	return
+	helpers.NewSuccessResponse(w, "Token is valid!")
 
+	return
+}
+
+func getUserByResetPasswordToken(w http.ResponseWriter, db *gorm.DB, token string) (user models.User, e error) {
+	var reset models.PasswordReset
+	db.Model(&models.PasswordReset{}).
+		Preload("User").
+		Where("token=? AND used_for_reset=false", token).
+		First(&reset)
+	if reset.ID == 0 {
+		err := helpers.ErrorResponse{}
+		err.ErrorCode = http.StatusUnprocessableEntity
+		err.Message = "Invalid password reset link!"
+		e = errors.New(err.Message)
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	if reset.ExpiresAt.Before(time.Now()) {
+		err := helpers.ErrorResponse{}
+		err.ErrorCode = http.StatusUnprocessableEntity
+		err.Message = "Expired token! Request new one."
+		e = errors.New(err.Message)
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	if reset.User == nil {
+		err := helpers.ErrorResponse{}
+		err.ErrorCode = http.StatusNotFound
+		err.Message = "No matching account!"
+		e = errors.New(err.Message)
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+
+	user = *reset.User
+
+	return
+}
+
+//ResetPassword reset assosiated user's password using reset token
+func ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var reqModel struct {
+		Token          string
+		Password       string
+		PasswordVerify string
+	}
+
+	print(reqModel.Password)
 }

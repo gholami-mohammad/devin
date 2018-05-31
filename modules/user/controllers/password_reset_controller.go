@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -13,6 +14,12 @@ import (
 	"devin/models"
 	"devin/modules/user/repository"
 )
+
+type passwordResetReqModel struct {
+	Token          string
+	Password       string
+	PasswordVerify string
+}
 
 //RequestPasswordReset generate token to reset user's password
 // @Mehtod: POST
@@ -151,11 +158,88 @@ func getUserByResetPasswordToken(w http.ResponseWriter, db *gorm.DB, token strin
 
 //ResetPassword reset assosiated user's password using reset token
 func ResetPassword(w http.ResponseWriter, r *http.Request) {
-	var reqModel struct {
-		Token          string
-		Password       string
-		PasswordVerify string
+
+	if helpers.IsRequestBodyNil(w, r) {
+		return
 	}
 
-	print(reqModel.Password)
+	reqModel, e := unmarshalPasswordResetRequest(w, r)
+	if e != nil {
+		return
+	}
+
+	if isValidResetPassword(w, reqModel) == false {
+		return
+	}
+
+	db := database.NewGORMInstance()
+	defer db.Close()
+
+	user, e := getUserByResetPasswordToken(w, db, reqModel.Token)
+	if e != nil {
+		return
+	}
+
+	user.SetEncryptedPassword(reqModel.Password)
+	db.Model(&user).UpdateColumn("password", user.Password)
+	expireResetPasswordToken(db, reqModel.Token)
+	helpers.NewSuccessResponse(w, "Your password updated successfully!")
+	return
+
+}
+
+// unmarshalPasswordResetRequest decode json request to passwordResetReqModel object
+func unmarshalPasswordResetRequest(w http.ResponseWriter, r *http.Request) (reqModel passwordResetReqModel, e error) {
+	e = json.NewDecoder(r.Body).Decode(&reqModel)
+	if e != nil {
+		err := helpers.ErrorResponse{}
+		err.ErrorCode = http.StatusBadRequest
+		err.Message = "Invalid request!"
+		err.Errors = make(map[string][]string)
+		err.Errors["dev"] = []string{e.Error()}
+		helpers.NewErrorResponse(w, &err)
+		return
+	}
+	return
+}
+
+//isValidResetPassword validate new password strength
+func isValidResetPassword(w http.ResponseWriter, reqModel passwordResetReqModel) bool {
+	if strings.EqualFold(strings.Trim(reqModel.Password, " "), "") {
+		err := helpers.ErrorResponse{}
+		err.ErrorCode = http.StatusUnprocessableEntity
+		err.Message = "An error accoured!"
+		err.Errors = make(map[string][]string)
+		err.Errors["Password"] = []string{"New Password can't be empty"}
+		helpers.NewErrorResponse(w, &err)
+		return false
+	}
+
+	if len(strings.Trim(reqModel.Password, " ")) < 6 {
+		err := helpers.ErrorResponse{}
+		err.ErrorCode = http.StatusUnprocessableEntity
+		err.Message = "An error accoured!"
+		err.Errors = make(map[string][]string)
+		err.Errors["Password"] = []string{"Password length must be greater than 6 characters"}
+		helpers.NewErrorResponse(w, &err)
+		return false
+	}
+
+	if !strings.EqualFold(reqModel.Password, reqModel.PasswordVerify) {
+		err := helpers.ErrorResponse{}
+		err.ErrorCode = http.StatusUnprocessableEntity
+		err.Message = "An error accoured!"
+		err.Errors = make(map[string][]string)
+		err.Errors["Password"] = []string{"New Password and its verify doesn't match!"}
+		helpers.NewErrorResponse(w, &err)
+		return false
+	}
+
+	return true
+}
+
+func expireResetPasswordToken(db *gorm.DB, token string) {
+	db.Model(&models.PasswordReset{}).
+		Where("token=?", token).
+		UpdateColumns(models.PasswordReset{UsedForReset: true, UpdatedAt: time.Now()})
 }

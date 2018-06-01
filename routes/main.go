@@ -15,6 +15,8 @@ func LoadRoutes(r *mux.Router) *mux.Router {
 	r.HandleFunc("/signup/verify", user_ctrl.VerifySignup).Methods(http.MethodGet)
 	r.HandleFunc("/signin", user_ctrl.Signin).Methods(http.MethodPost)
 	r.HandleFunc("/password_reset/request", user_ctrl.RequestPasswordReset).Methods(http.MethodPost)
+	r.HandleFunc("/password_reset/validate", user_ctrl.ValidatePasswordResetLink).Methods(http.MethodGet)
+	r.HandleFunc("/password_reset/do", user_ctrl.ResetPassword).Methods(http.MethodPost)
 
 	secureArea := r.PathPrefix("/").Subrouter().StrictSlash(true)
 	secureArea.Use(middlewares.Authenticate)

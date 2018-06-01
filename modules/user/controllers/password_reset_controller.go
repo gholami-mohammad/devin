@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -108,12 +109,12 @@ func ValidatePasswordResetLink(w http.ResponseWriter, r *http.Request) {
 	db := database.NewGORMInstance()
 	defer db.Close()
 
-	_, e = getUserByResetPasswordToken(w, db, token)
+	user, e := getUserByResetPasswordToken(w, db, token)
 	if e != nil {
 		return
 	}
 
-	helpers.NewSuccessResponse(w, "Token is valid!")
+	helpers.NewSuccessResponse(w, fmt.Sprintf(`Token is valid! Now, you can reset password for "%v"`, user.Email))
 
 	return
 }
@@ -157,6 +158,8 @@ func getUserByResetPasswordToken(w http.ResponseWriter, db *gorm.DB, token strin
 }
 
 //ResetPassword reset assosiated user's password using reset token
+// @Route: /api/password_reset/do
+// @Content-Type: application/json
 func ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	if helpers.IsRequestBodyNil(w, r) {

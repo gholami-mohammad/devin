@@ -5,9 +5,10 @@ import (
 	"strings"
 )
 
+// Validator validators struct
 type Validator struct{}
 
-// ValidateEmailFormat check email address format.
+// IsValidEmailFormat check email address format.
 func (Validator) IsValidEmailFormat(email string) bool {
 	if &email == nil || strings.EqualFold(email, "") {
 		return false
@@ -17,6 +18,7 @@ func (Validator) IsValidEmailFormat(email string) bool {
 	return emailRegexp.MatchString(email)
 }
 
+// IsValidUsernameFormat check the given string to use as username.
 func (Validator) IsValidUsernameFormat(username string) bool {
 	pattern := regexp.MustCompile(`^[a-z0-9\_]{3,100}$`)
 

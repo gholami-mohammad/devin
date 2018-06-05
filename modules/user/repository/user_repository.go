@@ -7,6 +7,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// IsUserExists check existance of userID in the users table
 func IsUserExists(db *gorm.DB, userID uint64) bool {
 	var count uint64
 	db.Model(&models.User{}).Where("id=? AND user_type=1", userID).Count(&count)

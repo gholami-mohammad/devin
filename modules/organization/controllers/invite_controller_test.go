@@ -20,7 +20,7 @@ import (
 var testID uint64 = 10000
 
 func getTestID() uint64 {
-	testID += 1
+	testID++
 	return testID
 }
 

@@ -6,27 +6,28 @@ import (
 
 	"devin/database"
 	"devin/helpers"
+	"devin/modules/rw_helpers"
 )
 
 //UpdateUserPermissionsOnOrganization Update permissions of given user on the given organization
 // @Method: POST
 // @Route: /api/organization/{organization_id:[0-9]+}/user/{user_id:[0-9]+}/update_permissions
 func UpdateUserPermissionsOnOrganization(w http.ResponseWriter, r *http.Request) {
-	if isJsonRequest(w, r) == false {
+	if rw_helpers.IsJSONRequest(w, r) == false {
 		return
 	}
 
-	authUser, e := getAuthenticatedUser(w, r)
+	authUser, e := rw_helpers.GetAuthenticatedUser(w, r)
 	if e != nil {
 		return
 	}
 
-	organizationID, e := extractOrganizationID(w, r, "organization_id")
+	organizationID, e := rw_helpers.ExtractOrganizationID(w, r, "organization_id")
 	if e != nil {
 		return
 	}
 
-	userID, e := extractUserIDFromURL(w, r, "user_id")
+	userID, e := rw_helpers.ExtractUserIDFromURL(w, r, "user_id")
 	if e != nil {
 		return
 	}
@@ -34,17 +35,17 @@ func UpdateUserPermissionsOnOrganization(w http.ResponseWriter, r *http.Request)
 	db := database.NewGORMInstance()
 	defer db.Close()
 
-	organization, e := fetchOrganizationFromDB(w, db, organizationID)
+	organization, e := rw_helpers.FetchOrganizationFromDB(w, db, organizationID)
 	if e != nil {
 		return
 	}
 
-	e = isUserExists(w, db, userID)
+	e = rw_helpers.IsUserExists(w, db, userID)
 	if e != nil {
 		return
 	}
 
-	if canUpdateUserOrganizationPermissions(w, db, authUser, organization) == false {
+	if rw_helpers.CanUpdateUserOrganizationPermissions(w, db, authUser, organization) == false {
 		return
 	}
 
@@ -52,7 +53,7 @@ func UpdateUserPermissionsOnOrganization(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var reqModel permissionUpdatableData
+	var reqModel rw_helpers.OrganizationPermissionUpdatableData
 	e = json.NewDecoder(r.Body).Decode(&reqModel)
 	if e != nil {
 		err := helpers.ErrorResponse{
@@ -60,6 +61,7 @@ func UpdateUserPermissionsOnOrganization(w http.ResponseWriter, r *http.Request)
 			ErrorCode: http.StatusUnprocessableEntity,
 		}
 		helpers.NewErrorResponse(w, &err)
+
 		return
 	}
 	defer r.Body.Close()
@@ -67,7 +69,7 @@ func UpdateUserPermissionsOnOrganization(w http.ResponseWriter, r *http.Request)
 	reqModel.UserID = userID
 	reqModel.OrganizationID = organizationID
 
-	e = updatePermissions(w, db, reqModel)
+	e = rw_helpers.UpdateOrganizationPermissions(w, db, reqModel)
 	if e != nil {
 		return
 	}

@@ -10,6 +10,7 @@ import (
 	"devin/database"
 	"devin/helpers"
 	"devin/modules/organization/repository"
+	"devin/modules/rw_helpers"
 )
 
 func init() {
@@ -19,7 +20,7 @@ func init() {
 //UserOrganizationsIndex return a list of organizations that the given user is a member of that.
 func UserOrganizationsIndex(w http.ResponseWriter, r *http.Request) {
 
-	authUser, e := getAuthenticatedUser(w, r)
+	authUser, e := rw_helpers.GetAuthenticatedUser(w, r)
 	if e != nil {
 		return
 	}
@@ -38,7 +39,7 @@ func UserOrganizationsIndex(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if canViewOrganizationsOfUser(w, authUser, *searchObject.UserID) == false {
+		if rw_helpers.CanViewOrganizationsOfUser(w, authUser, *searchObject.UserID) == false {
 			return
 		}
 	}
@@ -64,7 +65,7 @@ func UserOrganizationsIndex(w http.ResponseWriter, r *http.Request) {
 // Save process inserting and updating of organizations
 func Save(w http.ResponseWriter, r *http.Request) {
 
-	if isJsonRequest(w, r) == false {
+	if rw_helpers.IsJSONRequest(w, r) == false {
 		return
 	}
 
@@ -72,17 +73,17 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ownerID, e := extractIDFromURL(w, r)
+	ownerID, e := rw_helpers.ExtractIDFromURL(w, r)
 	if e != nil {
 		return
 	}
 
-	authUser, e := getAuthenticatedUser(w, r)
+	authUser, e := rw_helpers.GetAuthenticatedUser(w, r)
 	if e != nil {
 		return
 	}
 
-	reqModel, e := decodeOrganizationRequestModel(w, r)
+	reqModel, e := rw_helpers.DecodeOrganizationRequestModel(w, r)
 
 	reqModel.OwnerID = &ownerID
 	reqModel.FirstName = reqModel.FullName
@@ -90,30 +91,30 @@ func Save(w http.ResponseWriter, r *http.Request) {
 	reqModel.Email = strings.ToLower(reqModel.Email)
 	reqModel.UserType = 2 //2 for organizations
 
-	if canCreateOrganization(w, authUser, reqModel) == false {
+	if rw_helpers.CanCreateOrganization(w, authUser, reqModel) == false {
 		return
 	}
 
-	if isOrganizationUsernameValid(w, reqModel) == false {
+	if rw_helpers.IsOrganizationUsernameValid(w, reqModel) == false {
 		return
 	}
 
-	if isOrganizationEmailValid(w, reqModel) == false {
+	if rw_helpers.IsValidEmail(w, reqModel) == false {
 		return
 	}
 
 	db := database.NewGORMInstance()
 	defer db.Close()
 
-	if isUniqueEmail(w, db, reqModel) == false {
+	if rw_helpers.IsUniqueEmail(w, db, reqModel) == false {
 		return
 	}
 
-	if isUniqueUsername(w, db, reqModel) == false {
+	if rw_helpers.IsUniqueUsername(w, db, reqModel) == false {
 		return
 	}
 
-	reqModel, e = saveOrganization(w, db, reqModel)
+	reqModel, e = rw_helpers.SaveOrganization(w, db, reqModel)
 	if e != nil {
 		return
 	}

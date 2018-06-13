@@ -25,63 +25,106 @@ func Init() {
 
 // User : model of all system users
 type User struct {
-	tableName               struct{}            `sql:"public.users"`
-	ID                      uint64              ``
-	Username                string              ``
-	Email                   string              ``
-	Password                string              `json:"-"`
-	PlainPassword           string              `json:"Password" sql:"-"`
-	UserType                uint                `json:"-" doc:"1: authenticatable user, 2: organization"`
-	UserOrganizationMapping []*UserOrganization `gorm:"ForeignKey:UserID" doc:"Handle preload from a user object"`
-	OrganizationUserMapping []*UserOrganization `gorm:"ForeignKey:OrganizationID" doc:"Handle preload from an organization object"`
-	OwnerID                 *uint64             `doc:"کد یکتای مالک و سازنده ی یک کمپانی. این فیلد برای حساب کاربری افراد میتواند خالی باشد."`
-	Owner                   *User               ``
-	EmailVerified           bool                ``
-	EmailVerificationToken  *string             `json:"-"`
-	IsRootUser              bool                `json:"-"`
-	CreatedAt               time.Time           ``
-	UpdatedAt               time.Time           ``
-	DeletedAt               *time.Time          `json:"-"`
+	tableName     struct{} `sql:"public.users"`
+	ID            uint64
+	Username      string
+	Email         string
+	Password      string `json:"-"`
+	PlainPassword string `json:"Password" sql:"-"`
+
+	// 1: authenticatable user, 2: organization
+	UserType uint `json:"-"`
+
+	// Handle preload from a user object
+	UserOrganizationMapping []*UserOrganization `gorm:"ForeignKey:UserID"`
+
+	// Handle preload from an organization object
+	OrganizationUserMapping []*UserOrganization `gorm:"ForeignKey:OrganizationID"`
+
+	// OwnerID used for users of type organization
+	OwnerID                *uint64
+	Owner                  *User
+	EmailVerified          bool
+	EmailVerificationToken *string `json:"-"`
+	IsRootUser             bool    `json:"-"`
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+	DeletedAt              *time.Time `json:"-"`
 
 	PublicProfile
 }
 
+// PublicProfile store data about profile of user or organization
 type PublicProfile struct {
-	FirstName                *string         ``
-	LastName                 *string         ``
-	FullName                 *string         `sql:"-"`
-	Avatar                   *string         ``
-	JobTitle                 *string         `doc:"User's job title in a organization"`
-	LocalizationLanguageID   *uint           `doc:"FK to countries table to get localization settings"`
-	LocalizationLanguage     *Country        `doc:"Belongs to Country model to load i18n settings"`
-	DateFormat               *string         `doc:"Default date formate to show dates in UI. List of date formates stored in 'date_formats' table, but for more DB performance, directly saved here."`
-	TimeFormat               *string         `doc:"Default time format to show in UI. Time formats stored in 'time_formats' table, but for more DB performance, directly saved here."`
-	CalendarSystemID         *uint           `doc:"FK to calendar_systems"`
-	CalendarSystem           *CalendarSystem `doc:"Which calendar system will used to use in datepicker and showing dates "`
-	OfficePhoneCountryCodeID *uint           `doc:"FK to countries table"`
-	OfficePhoneCountryCode   *Country        `doc:"Belogs to Country"`
-	OfficePhoneNumber        *string         ``
-	HomePhoneCountryCodeID   *uint           `doc:"FK to countries table"`
-	HomePhoneCountryCode     *Country        `doc:"Belogs to Country"`
-	HomePhoneNumber          *string         ``
-	CellPhoneCountryCodeID   *uint           `doc:"FK to countries table"`
-	CellPhoneCountryCode     *Country        `doc:"Belogs to Country"`
-	CellPhoneNumber          *string         ``
-	FaxCountryCodeID         *uint           `doc:"FK to countries table"`
-	FaxCountryCode           *Country        `doc:"Belogs to Country"`
-	FaxNumber                *string         ``
-	CountryID                *uint           `doc:"#Address, FK to countries table. To improve database performance and ignore inner joings on SQL queries to load this data."`
-	Country                  *Country        `doc:"Belogs to Country"`
-	ProvinceID               *uint           `doc:"#Address, FK to provinces table. To improve database performance and ignore inner joings on SQL queries to load this data."`
-	Province                 *Province       `doc:"Belogs to Province"`
-	CityID                   *uint           `doc:"#Address, FK to cities table"`
-	City                     *City           `doc:"Belogs to City"`
-	Twitter                  *string         `doc:"Twitter username e.g 'm6devin' or full profile URL like 'https://twitter.com/m6devin'"`
-	Linkedin                 *string         `doc:"Linkedin full profile URL "`
-	GooglePlus               *string         `doc:"Google plus full profile URL"`
-	Facebook                 *string         `doc:"Facebook username or full profile URL"`
-	Telegram                 *string         `doc:"Telegram username or full telegram profile URL"`
-	Website                  *string         `doc:"Personnal website URL"`
+	FirstName *string
+	LastName  *string
+	FullName  *string `sql:"-"`
+	Avatar    *string
+	JobTitle  *string
+	// FK to countries table to get localization settings
+	LocalizationLanguageID *uint
+	LocalizationLanguage   *Country
+
+	// Default date formate to show dates in UI. List of date formates stored in 'date_formats' table, but for more DB performance, directly saved here.
+	DateFormat *string
+
+	// Default time format to show in UI. Time formats stored in 'time_formats' table, but for more DB performance, directly saved here.
+	TimeFormat *string
+
+	// FK to calendar_systems
+	// Which calendar system will used to use in datepicker and showing dates
+	CalendarSystemID *uint
+	CalendarSystem   *CalendarSystem
+
+	// FK to countries table
+	OfficePhoneCountryCodeID *uint
+	OfficePhoneCountryCode   *Country
+	OfficePhoneNumber        *string
+
+	// FK to countries table
+	HomePhoneCountryCodeID *uint
+	HomePhoneCountryCode   *Country
+	HomePhoneNumber        *string
+
+	// FK to countries table
+	CellPhoneCountryCodeID *uint
+	CellPhoneCountryCode   *Country
+	CellPhoneNumber        *string
+
+	// FK to countries table
+	FaxCountryCodeID *uint
+	FaxCountryCode   *Country
+	FaxNumber        *string
+
+	// #Address, FK to countries table. To improve database performance and ignore inner joings on SQL queries to load this data.
+	CountryID *uint
+	Country   *Country
+
+	// #Address, FK to provinces table. To improve database performance and ignore inner joings on SQL queries to load this data.
+	ProvinceID *uint
+	Province   *Province
+
+	// #Address, FK to cities table
+	CityID *uint
+	City   *City
+
+	// Twitter username e.g 'm6devin' or full profile URL like 'https://twitter.com/m6devin'
+	Twitter *string
+
+	// Linkedin full profile URL
+	Linkedin *string
+
+	// Google plus full profile URL
+	GooglePlus *string
+
+	// Facebook username or full profile URL
+	Facebook *string
+
+	// Telegram username or full telegram profile URL
+	Telegram *string
+
+	// Personnal website URL
+	Website *string
 }
 
 func (User) TableName() string {

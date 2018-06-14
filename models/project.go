@@ -6,35 +6,70 @@ import (
 
 // Project is the ORM model to interact with projects table in database
 type Project struct {
-	tableName               struct{}       `sql:"projects"`
-	ID                      uint64         `doc:"Auto increment ID"`
-	Name                    string         `doc:"Unique name of the project. Unique rule is : a-z, A-Z, 0-9, dash(-), underscore(_) "`
-	Title                   string         `doc:"Nullable, Like name without any naming rule."`
-	Description             string         `doc:"Nullable, Full description of project. Possible to link to a notebook."`
-	ScheduledStartDate      *time.Time     `doc:"تاریخ پیش بینی شده برای شروع پروژه"`
-	StartDate               *time.Time     `doc:"تاریخ شروع پروژه"`
-	ScheduledCompletionDate *time.Time     `doc:"تاریخ پیش بینی شده برای کامل و تمام شدن پروژه"`
-	CompletionDate          *time.Time     `doc:"تاریخ واقعی اتمام پروژه که توسط مدیر کل پروژه این تاریخ ثبت میشود"`
-	Users                   []ProjectUser  `doc:"List of users who can access this project. This list must be from the organization peoples."`
-	Tags                    []TaggedObject `doc:"A HasMany relation, where ModuleID = models.MODULE_PROJECT"`
-	DefaultTaskViewID       uint           `doc:"For now, 2 task view is availabel: 1=List view ; 2=Board view"`
-	StatusID                uint           `doc:"active, archived, pending, etc"`
-	Status                  *ProjectStatus
-	OwnerUserID             uint64 `doc:"مالک وسازنده ی این پروژه"`
-	OwnerUser               *User
-	OwnerOrganizationID     uint64 `doc:"این پروژه در کدام سازمان ساخته شده است"`
-	OwnerOrganization       *User
-	ProjectManagerID        uint64 `doc:"مدیر پروژه و مسئول این پروژه کیست"`
-	ProjectManager          *User
-	GitRepositories         []Repository
-	CreatedByID             uint64
-	CreatedBy               *User
-	CreatedAt               time.Time
-	UpdatedAt               time.Time
-	DeletedAt               *time.Time
+	ID uint64
+
+	// Unique name of the project. Unique rule is : a-z, A-Z, 0-9, dash(-), underscore(_)
+	Name string
+
+	// Like name without any naming rule.
+	Title *string
+
+	// Nullable, Full description of project. Possible to link to a notebook.
+	Description *string
+
+	// Predicted datetime to start the project
+	ScheduledStartDate *time.Time
+
+	// Real datetime that the project starts
+	StartDate *time.Time
+
+	// Predicted datetime of project completion
+	ScheduledCompletionDate *time.Time
+
+	// Real completion datetime
+	CompletionDate *time.Time
+
+	// List of users who can access this project.
+	// This list must be from the organization peoples.
+	Users []ProjectUser
+
+	// A HasMany relation, where ModuleID = models.MODULE_PROJECT
+	Tags []TaggedObject
+
+	// For now, 2 task views are availabel: 1=List view ; 2=Board view
+	DefaultTaskViewID uint
+
+	// active, archived, pending, etc
+	StatusID uint
+	Status   *ProjectStatus
+
+	// Who's the owner of the project, It may be not equal to creator of project
+	OwnerUserID uint64
+	OwnerUser   *User
+
+	// This project created under this organization
+	// This field can be NULL
+	// If no owner organization selected for the projet, it will be in the 'Personnal projects' group
+	OwnerOrganizationID *uint64 `doc:"این پروژه در کدام سازمان ساخته شده است"`
+	OwnerOrganization   *User
+
+	// Who is the project manager? By default project owner is the project manager.
+	ProjectManagerID uint64
+	ProjectManager   *User
+
+	// A project can has many git repository to store its source codes.
+	GitRepositories []Repository
+
+	// The Creator of this record
+	CreatedByID uint64
+	CreatedBy   *User
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
 
 	EnableWikiModule         bool
-	AllowPublicWiki          bool `doc:"If wiki is enable, Is it public?"`
+	AllowPublicWiki          bool
 	EnableTasksModule        bool
 	EnableMilestonesModule   bool
 	EnableFilesModule        bool

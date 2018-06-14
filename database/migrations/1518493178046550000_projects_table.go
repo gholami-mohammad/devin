@@ -18,7 +18,7 @@ func (Migration) MigrateProjectsTable() (e error) {
     default_task_view_id            integer DEFAULT 1,
     status_id                       integer,
     owner_user_id                   bigint NOT NULL,
-    owner_organization_id                bigint NOT NULL,
+    owner_organization_id           bigint ,
     project_manager_id              bigint,
     created_by_id                   bigint NOT NULL,
 

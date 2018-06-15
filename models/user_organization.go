@@ -4,23 +4,40 @@ import (
 	"time"
 )
 
+// UserOrganization mapping of users and organization membership
 type UserOrganization struct {
-	tableName                struct{} `sql:"public.user_organization"`
-	ID                       uint64
-	UserID                   *uint64 `doc:"ID of users record with type=1"`
-	User                     *User
-	OrganizationID           *uint64 `doc:"ID of users record with type=2"`
-	Organization             *User
-	IsAdminOfOrganization    bool   `doc:"If is_admin=true => user will has full access"`
-	CanCreateProject         bool   `doc:"Permission of adding new project to assigned organization by this user"`
-	CanAddUserToOrganization bool   `doc:"Permission of adding new user to organization by this user"`
-	CreatedByID              uint64 `doc:"Who add this user to this organization? OR How create this organization for this user?"`
-	CreatedBy                *User
-	CreatedAt                time.Time
-	UpdatedAt                time.Time
-	DeletedAt                *time.Time
+	ID uint64
+
+	// ID of users record with type=1
+	UserID *uint64
+	User   *User
+
+	// ID of users record with type=2
+	OrganizationID *uint64
+	Organization   *User
+
+	// If IsAdminOfOrganization equals true , then user will has full access
+	IsAdminOfOrganization bool
+
+	// Permission of adding new project to assigned organization by this user
+	CanCreateProject bool
+
+	// Permission of editing a project of assigned organizaiton
+	CanEditProject bool
+
+	// Permission of adding new user to organization by this user
+	CanAddUserToOrganization bool
+
+	// The creator of this record in the DB
+	CreatedByID uint64
+	CreatedBy   *User
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
 }
 
+// TableName return table name
 func (UserOrganization) TableName() string {
 	return "public.user_organization"
 }

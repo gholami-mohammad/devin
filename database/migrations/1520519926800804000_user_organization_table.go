@@ -12,6 +12,7 @@ func (Migration) MigrateUserOrganizationTable() (e error) {
     organization_id bigint NOT NULL,
     is_admin_of_organization bool DEFAULT false,
     can_create_project bool DEFAULT false,
+    can_update_project bool DEFAULT false,
     can_add_user_to_organization bool DEFAULT false,
     created_by_id bigint NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,

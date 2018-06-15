@@ -28,7 +28,10 @@ func NewGORMInstance() *gorm.DB {
 		return nil
 	}
 
-	return con
+	return con.Set("gorm:association_save_reference", false).
+		Set("gorm:association_autoupdate", false).
+		Set("gorm:association_autocreate", false)
+
 }
 
 func AddSeqID(tableName string) {

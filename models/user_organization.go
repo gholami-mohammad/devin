@@ -23,7 +23,7 @@ type UserOrganization struct {
 	CanCreateProject bool
 
 	// Permission of editing a project of assigned organizaiton
-	CanEditProject bool
+	CanUpateProject bool
 
 	// Permission of adding new user to organization by this user
 	CanAddUserToOrganization bool

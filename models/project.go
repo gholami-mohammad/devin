@@ -14,6 +14,11 @@ type Project struct {
 	// Like name without any naming rule.
 	Title *string
 
+	// 1 = private : Only accessabe to owner, members and roots
+	// 2 = public in organization : Only accessable to owner, members, root and organization members
+	// 3 = public for all : Globaly accessable for all
+	PrivacyTypeID uint
+
 	// Nullable, Full description of project. Possible to link to a notebook.
 	Description *string
 
@@ -50,7 +55,7 @@ type Project struct {
 	// This project created under this organization
 	// This field can be NULL
 	// If no owner organization selected for the projet, it will be in the 'Personnal projects' group
-	OwnerOrganizationID *uint64 `doc:"این پروژه در کدام سازمان ساخته شده است"`
+	OwnerOrganizationID *uint64
 	OwnerOrganization   *User
 
 	// Who is the project manager? By default project owner is the project manager.

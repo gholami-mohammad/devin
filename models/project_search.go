@@ -26,7 +26,7 @@ type ProjectSearch struct {
 	// =-=-=-=-=-=-=-=-=-=
 
 	// Offset of found records to be return
-	FromItem uint64
+	Offset uint64
 
 	// Item count to be return
 	// If you want to get all matching items, set limit to 0

@@ -33,3 +33,12 @@ func IsNilOrEmptyString(str *string) bool {
 
 	return false
 }
+
+// IsNilUint64 check give number to be 0 or nil
+func IsNilUint64(i *uint64) bool {
+	if i == nil || *i == 0 {
+		return true
+	}
+
+	return false
+}

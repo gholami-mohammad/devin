@@ -5,11 +5,34 @@ import (
 	"net/http"
 
 	"devin/database"
+	"devin/models"
+	project_repo "devin/modules/project/repository"
 	"devin/modules/rw_helpers"
 )
 
 // ProjectController handle functionalities of Project
 type ProjectController struct{}
+
+// UserProjectsIndex return list of projects owned by given user or this user is a member of that
+func (ProjectController) UserProjectsIndex(w http.ResponseWriter, r *http.Request) {
+	authUser, _, _ := models.User{}.ExtractUserFromRequestContext(r)
+
+	// Decode search data
+	searchModel, e := rw_helpers.DecodeProjectSearchFilters(w, r)
+	if e != nil {
+		return
+	}
+	defer r.Body.Close()
+
+	db := database.NewGORMInstance()
+	defer db.Close()
+
+	pgn, _ := project_repo.SearchProjects(db, authUser, searchModel)
+	w.Header().Add("Content-Type", "applicaiotn/josn")
+	json.NewEncoder(w).Encode(&pgn)
+
+	return
+}
 
 // Save handle inserting and updating of project
 // Request body is json encoded of project model

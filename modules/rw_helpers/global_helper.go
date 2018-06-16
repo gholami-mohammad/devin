@@ -144,3 +144,35 @@ func IsJSONRequest(w http.ResponseWriter, r *http.Request) bool {
 
 	return true
 }
+
+// GetCurrectpage get the 'page' parameter form request query string
+func GetCurrectpage(r *http.Request) uint64 {
+	pageStr := r.URL.Query().Get("page")
+
+	page, e := strconv.ParseUint(pageStr, 10, 64)
+	if e != nil {
+		page = 1
+	}
+
+	if page <= 0 {
+		page = 1
+	}
+
+	return page
+}
+
+// GetPerPage get the 'per_page' parameter form request query string
+func GetPerPage(r *http.Request) uint64 {
+	perPageStr := r.URL.Query().Get("per_page")
+
+	perPage, e := strconv.ParseUint(perPageStr, 10, 64)
+	if e != nil {
+		perPage = 1
+	}
+
+	if perPage <= 0 {
+		perPage = 1
+	}
+
+	return perPage
+}

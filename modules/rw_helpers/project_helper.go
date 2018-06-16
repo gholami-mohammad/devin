@@ -12,6 +12,26 @@ import (
 	"devin/policies"
 )
 
+// DecodeProjectSearchFilters get request body, decode from json to ProjectSearch
+// Handle request body erros
+func DecodeProjectSearchFilters(w http.ResponseWriter, r *http.Request) (searchModel models.ProjectSearch, e error) {
+	if helpers.IsRequestBodyNil(w, r) == true {
+		e = errors.New("request body can't be empty")
+		return
+	}
+	e = json.NewDecoder(r.Body).Decode(&searchModel)
+	if e != nil {
+		err := helpers.ErrorResponse{Message: "Invalid search filters", ErrorCode: http.StatusUnprocessableEntity}
+		err.Errors = make(map[string][]string)
+		err.Errors["dev"] = []string{e.Error()}
+		helpers.NewErrorResponse(w, &err)
+
+		return
+	}
+
+	return
+}
+
 // CanSaveProject check permission of authenticated user for
 // insert or update a project inside an organization
 func CanSaveProject(w http.ResponseWriter, db *gorm.DB, authUser models.User, ownerOrganizationID *uint64, projectReqModel models.Project) bool {

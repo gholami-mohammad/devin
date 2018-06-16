@@ -24,3 +24,12 @@ func (Validator) IsValidUsernameFormat(username string) bool {
 
 	return pattern.MatchString(username)
 }
+
+// IsNilOrEmptyString check give string to be empty or nil
+func IsNilOrEmptyString(str *string) bool {
+	if str == nil || strings.EqualFold(strings.Trim(*str, " "), "") == true {
+		return true
+	}
+
+	return false
+}

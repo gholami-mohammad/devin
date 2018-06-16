@@ -42,3 +42,12 @@ func IsNilUint64(i *uint64) bool {
 
 	return false
 }
+
+// IsNilUint check give number to be 0 or nil
+func IsNilUint(i *uint) bool {
+	if i == nil || *i == 0 {
+		return true
+	}
+
+	return false
+}

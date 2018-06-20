@@ -7,6 +7,7 @@ import (
 
 	"devin/middlewares"
 	org_ctrl "devin/modules/organization/controllers"
+	project_ctrl "devin/modules/project/controllers"
 	user_ctrl "devin/modules/user/controllers"
 )
 
@@ -33,6 +34,8 @@ func LoadRoutes(r *mux.Router) *mux.Router {
 	secureArea.HandleFunc("/organization/{organization_id:[0-9]+}/user/{user_id:[0-9]+}/update_permissions", org_ctrl.UpdateUserPermissionsOnOrganization).Methods(http.MethodPost)
 
 	secureArea.HandleFunc("/invitation/{id:[0-9]+}/set_acceptance/{acceptance_status:(?:accept|reject)}", org_ctrl.AcceptOrRejectInvitation)
+
+	secureArea.HandleFunc("/projects", project_ctrl.ProjectController{}.ProjectsIndex).Methods(http.MethodGet)
 
 	secureArea.HandleFunc("/whoami", user_ctrl.Whoami).Methods(http.MethodGet)
 	secureArea.HandleFunc("/whois/{id:[0-9]+}", user_ctrl.Whois).Methods(http.MethodGet)

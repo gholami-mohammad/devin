@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 
@@ -15,11 +16,11 @@ import (
 // DecodeProjectSearchFilters get request body, decode from json to ProjectSearch
 // Handle request body erros
 func DecodeProjectSearchFilters(w http.ResponseWriter, r *http.Request) (searchModel models.ProjectSearch, e error) {
-	if helpers.IsRequestBodyNil(w, r) == true {
-		e = errors.New("request body can't be empty")
-		return
+	q := r.URL.Query().Get("q")
+	if strings.EqualFold(q, "") {
+		q = `{}`
 	}
-	e = json.NewDecoder(r.Body).Decode(&searchModel)
+	e = json.Unmarshal([]byte(q), &searchModel)
 	if e != nil {
 		err := helpers.ErrorResponse{Message: "Invalid search filters", ErrorCode: http.StatusUnprocessableEntity}
 		err.Errors = make(map[string][]string)

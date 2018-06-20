@@ -13,8 +13,8 @@ import (
 // ProjectController handle functionalities of Project
 type ProjectController struct{}
 
-// UserProjectsIndex return list of projects owned by given user or this user is a member of that
-func (ProjectController) UserProjectsIndex(w http.ResponseWriter, r *http.Request) {
+// ProjectsIndex return list of projects owned by given user or this user is a member of that
+func (ProjectController) ProjectsIndex(w http.ResponseWriter, r *http.Request) {
 	authUser, _, _ := models.User{}.ExtractUserFromRequestContext(r)
 
 	// Decode search data

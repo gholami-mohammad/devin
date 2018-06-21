@@ -11,7 +11,7 @@ import (
 // @param db A new instance of database
 // @param authenticatedUser Logged in user
 // @param searchModel search filters
-func SearchProjects(db *gorm.DB, authenticatedUser models.User, searchModel models.ProjectSearch) (pagination models.Pagination, e error) {
+func SearchProjects(db *gorm.DB, authenticatedUser models.User, searchModel models.ProjectSearch) (data []models.Project, total uint64, e error) {
 	db = db.Debug().Model(&models.Project{})
 	db = searchModel.GetWhereClause(db)
 	if authenticatedUser.ID == 0 {
@@ -41,17 +41,15 @@ func SearchProjects(db *gorm.DB, authenticatedUser models.User, searchModel mode
 
 	go func() {
 		defer wg.Done()
-		db.Count(&pagination.Total)
+		db.Count(&total)
 	}()
 
 	go func() {
 		defer wg.Done()
-		if searchModel.Limit > 0 {
-			db = db.Limit(searchModel.Limit)
+		if searchModel.PerPage > 0 {
+			db = db.Limit(searchModel.PerPage)
 		}
-		var data []models.Project
-		db = db.Offset(searchModel.Offset).Find(&data)
-		pagination.Data = data
+		db = db.Offset((searchModel.CurrentPage - 1) * searchModel.PerPage).Find(&data)
 	}()
 
 	wg.Wait()

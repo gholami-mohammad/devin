@@ -12,20 +12,28 @@ import (
 // @param authenticatedUser Logged in user
 // @param searchModel search filters
 func SearchProjects(db *gorm.DB, authenticatedUser models.User, searchModel models.ProjectSearch) (pagination models.Pagination, e error) {
-	db = db.Model(&models.Project{})
+	db = db.Debug().Model(&models.Project{})
 	db = searchModel.GetWhereClause(db)
-
 	if authenticatedUser.ID == 0 {
 		// search as anonymouse
+		// TODO
+		return
+	} else if authenticatedUser.ID == *searchModel.UserID {
+		// search on his (authenticatedUser) projects
+		db = allMyProjects(db, authenticatedUser.ID)
 	} else if authenticatedUser.IsRootUser == true {
 		// seach all projects
+		// TODO
+		return
 	} else if searchModel.UserID == nil || *searchModel.UserID == 0 {
 		// seach all public projects + searcher user's projects
-	} else if authenticatedUser.ID == *searchModel.UserID {
-		// search on authenticatedUser projects
+		// TODO
+		return
 	} else {
 		// authenticatedUser is searching on searchModel.UserID's projects
 		// just public projects of this user can be shown
+		// TODO
+		return
 	}
 
 	var wg sync.WaitGroup
@@ -41,11 +49,20 @@ func SearchProjects(db *gorm.DB, authenticatedUser models.User, searchModel mode
 		if searchModel.Limit > 0 {
 			db = db.Limit(searchModel.Limit)
 		}
-
-		db = db.Offset(searchModel.Offset).Find(&pagination.Data)
+		var data []models.Project
+		db = db.Offset(searchModel.Offset).Find(&data)
+		pagination.Data = data
 	}()
 
 	wg.Wait()
 
 	return
+}
+
+// allMyProjects limit search on the given authUserID,
+// Logged in user searching on his projects
+func allMyProjects(db *gorm.DB, authUserID uint64) *gorm.DB {
+	db = db.Where(`owner_user_id=? OR 
+		id IN (SELECT project_id FROM project_users WHERE user_id=?)`, authUserID, authUserID)
+	return db
 }

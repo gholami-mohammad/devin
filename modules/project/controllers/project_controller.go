@@ -22,13 +22,20 @@ func (ProjectController) ProjectsIndex(w http.ResponseWriter, r *http.Request) {
 	if e != nil {
 		return
 	}
+
+	searchModel.PerPage = rw_helpers.GetPerPage(r)
+	searchModel.CurrentPage = rw_helpers.GetCurrectpage(r)
+
 	defer r.Body.Close()
 
 	db := database.NewGORMInstance()
 	defer db.Close()
 
-	pgn, _ := project_repo.SearchProjects(db, authUser, searchModel)
-	w.Header().Add("Content-Type", "applicaiotn/josn")
+	data, total, _ := project_repo.SearchProjects(db, authUser, searchModel)
+	var pgn models.Pagination
+	pgn.Make(data, total, searchModel.CurrentPage, searchModel.PerPage)
+
+	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&pgn)
 
 	return

@@ -25,12 +25,8 @@ type ProjectSearch struct {
 	// Pagination options
 	// =-=-=-=-=-=-=-=-=-=
 
-	// Offset of found records to be return
-	Offset uint64
-
-	// Item count to be return
-	// If you want to get all matching items, set limit to 0
-	Limit uint64
+	CurrentPage uint64
+	PerPage     uint64
 
 	// Custom order sql
 	Order string

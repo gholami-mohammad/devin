@@ -167,11 +167,11 @@ func GetPerPage(r *http.Request) uint64 {
 
 	perPage, e := strconv.ParseUint(perPageStr, 10, 64)
 	if e != nil {
-		perPage = 1
+		perPage = 10
 	}
 
 	if perPage <= 0 {
-		perPage = 1
+		perPage = 10
 	}
 
 	return perPage

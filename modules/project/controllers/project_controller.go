@@ -83,3 +83,18 @@ func (ProjectController) Save(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&projectReqModel)
 }
+
+// BasicInfo load basic information to render project create/update form
+func (ProjectController) BasicInfo(w http.ResponseWriter, r *http.Request) {
+	db := database.NewGORMInstance()
+	defer db.Close()
+
+	var basicInfo struct {
+		Statuses []models.ProjectStatus
+	}
+
+	db.Find(&basicInfo.Statuses)
+
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&basicInfo)
+}

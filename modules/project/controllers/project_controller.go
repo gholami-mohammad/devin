@@ -85,6 +85,7 @@ func (ProjectController) Save(w http.ResponseWriter, r *http.Request) {
 }
 
 // BasicInfo load basic information to render project create/update form
+// @Route: /api/projects/basic_info
 func (ProjectController) BasicInfo(w http.ResponseWriter, r *http.Request) {
 	db := database.NewGORMInstance()
 	defer db.Close()

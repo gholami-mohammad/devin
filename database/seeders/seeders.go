@@ -29,4 +29,8 @@ func SeedDB() {
 
 	db.Exec(`insert into time_formats (id, name) values (1, '15:04:05');`)
 	db.Exec(`insert into time_formats (id, name) values (2, '15:04');`)
+
+	db.Exec(`insert into project_statuses (id, status) values (1, 'Active')`)
+	db.Exec(`insert into project_statuses (id, status) values (2, 'Archived')`)
+	db.Exec(`insert into project_statuses (id, status) values (3, 'Pendig')`)
 }

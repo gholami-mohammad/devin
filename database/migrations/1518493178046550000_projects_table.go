@@ -10,7 +10,7 @@ func (Migration) MigrateProjectsTable() (e error) {
     id                              bigserial NOT NULL,
     name                            varchar(200) NOT NULL,
     title                           varchar(200),
-    privacy_type_id                 integer NOT NULL DEFAULT 1,
+    visibility_type_id              integer NOT NULL DEFAULT 1,
     description                     text,
     scheduled_start_date            timestamp with time zone,
     start_date                      timestamp with time zone,

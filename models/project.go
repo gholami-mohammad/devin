@@ -17,7 +17,7 @@ type Project struct {
 	// 1 = private : Only accessabe to owner, members and roots
 	// 2 = public in organization : Only accessable to owner, members, root and organization members
 	// 3 = public for all : Globaly accessable for all
-	PrivacyTypeID uint
+	VisibilityTypeID uint
 
 	// Nullable, Full description of project. Possible to link to a notebook.
 	Description *string

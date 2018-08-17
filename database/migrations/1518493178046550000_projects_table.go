@@ -26,7 +26,7 @@ func (Migration) MigrateProjectsTable() (e error) {
     enable_wiki_module              bool,
     allow_public_wiki               bool,
     enable_tasks_module             bool,
-    enale_milestones_module         bool,
+    enable_milestones_module         bool,
     enable_files_module             bool,
     enable_messages_module          bool,
     enable_time_logs_module         bool,

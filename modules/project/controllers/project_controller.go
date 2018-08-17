@@ -91,11 +91,30 @@ func (ProjectController) BasicInfo(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	var basicInfo struct {
-		Statuses []models.ProjectStatus
+		Statuses      []models.ProjectStatus
+		Organizations []models.User
 	}
 
 	db.Find(&basicInfo.Statuses)
+	user, err := rw_helpers.GetAuthenticatedUser(w, r)
+	if err != nil {
+		return
+	}
 
+	db.Model(&models.User{}).
+		Where("user_type=2").
+		Where("owner_id=?", user.ID).
+		Find(&basicInfo.Organizations)
+	db.Raw(`select * from users u where user_type=2 and owner_id=?
+	union
+select u.* from users u
+	where u.id in (
+			select organization_id 
+			from user_organization uo 
+			where uo.user_id = ? 
+			and (uo.is_admin_of_organization=true or uo.can_create_project=true or uo.can_update_project=true ) 
+	)`, user.ID, user.ID).
+		Scan(&basicInfo.Organizations)
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&basicInfo)
 }

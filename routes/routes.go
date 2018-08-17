@@ -37,6 +37,7 @@ func LoadRoutes(r *mux.Router) *mux.Router {
 
 	secureArea.HandleFunc("/projects", project_ctrl.ProjectController{}.ProjectsIndex).Methods(http.MethodGet)
 	secureArea.HandleFunc("/projects/basic_info", project_ctrl.ProjectController{}.BasicInfo)
+	secureArea.HandleFunc("/projects/save", project_ctrl.ProjectController{}.Save).Methods(http.MethodPost)
 
 	secureArea.HandleFunc("/whoami", user_ctrl.Whoami).Methods(http.MethodGet)
 	secureArea.HandleFunc("/whois/{id:[0-9]+}", user_ctrl.Whois).Methods(http.MethodGet)

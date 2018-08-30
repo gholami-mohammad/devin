@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"devin/database"
@@ -60,6 +61,11 @@ func (ProjectController) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validate input data
+	if rw_helpers.ValidateProjectRequestModel(w, projectReqModel) != nil {
+		return
+	}
+
 	db := database.NewGORMInstance()
 	defer db.Close()
 
@@ -73,7 +79,7 @@ func (ProjectController) Save(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-
+	log.Println(projectReqModel)
 	if projectReqModel.ID != 0 {
 		db.Model(&projectReqModel).Where("id=?", projectReqModel.ID).Update(&projectReqModel)
 	} else {

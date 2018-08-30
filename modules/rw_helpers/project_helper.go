@@ -92,6 +92,51 @@ func DecodeProjectRequestModel(w http.ResponseWriter, r *http.Request) (project 
 	return
 }
 
+// ValidateProjectRequestModel will check request data for creating or updating of a project
+func ValidateProjectRequestModel(w http.ResponseWriter, db *gorm.DB, reqModel models.Project) (err error) {
+	resErr := helpers.ErrorResponse{}
+	resErr.Errors = make(map[string][]string)
+
+	// name field is required
+	if strings.EqualFold(reqModel.Name, "") {
+		resErr.Errors["name"] = append(resErr.Errors["name"], "The given name already taken!")
+	}
+
+	// check uniqueness of name
+	if isProjectNameUnique(db, reqModel.Name, reqModel.ID) == false {
+		resErr.Errors["name"] = append(resErr.Errors["name"], "Project name can't be empty!")
+	}
+
+	if len(resErr.Errors) == 0 {
+		return nil
+	}
+	resErr.ErrorCode = http.StatusUnprocessableEntity
+	resErr.Message = "Invalid data!"
+	helpers.NewErrorResponse(w, &resErr)
+
+	return errors.New(resErr.Message)
+}
+
+// isProjectNameUnique check uniqueness of project name
+// If you pass 0 to the projectID, it will check all records
+// otherwise check all records insted of given ID
+func isProjectNameUnique(db *gorm.DB, projectName string, projectID uint64) bool {
+	var project models.Project
+	if projectID <= 0 {
+		db.Where("name = ?", projectName).First(&project)
+	} else {
+		db.Where("name = ?", projectName).Where("id != ?", projectID).First(&project)
+	}
+
+	if project.ID == 0 {
+		// Project name IS unique
+		return true
+	}
+
+	// Project name IS NOT unique
+	return false
+}
+
 // GetProjectByID try to load project from DB. If no item found, returns an error.
 // This function handle http response errors
 func GetProjectByID(w http.ResponseWriter, db *gorm.DB, id uint64) (project models.Project, e error) {
